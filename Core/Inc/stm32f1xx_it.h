@@ -27,6 +27,7 @@ void SysTick_Handler(void);
 
 /* Peripheral handlers used by this template */
 void USART1_IRQHandler(void);
+void SDIO_IRQHandler(void);
 
 #ifdef __cplusplus
 }

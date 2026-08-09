@@ -39,7 +39,8 @@ set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/Linker/STM32F103ZETX_FLASH.ld")
 # on every build), so adding a new .c file requires no CMake edits.
 # -----------------------------------------------------------------------------
 file(GLOB HAL_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal*.c")
+    "${CMAKE_SOURCE_DIR}/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal*.c"
+    "${CMAKE_SOURCE_DIR}/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_*.c")
 list(FILTER HAL_SOURCES EXCLUDE REGEX "_template\\.c$") # msp/timebase templates
 
 # Third-party ST sources: silence benign warnings triggered by the strict

@@ -7,6 +7,7 @@
 
 #include "main.h"
 #include "stm32f1xx_it.h"
+#include "sd_card.h"
 #include "usart.h"
 
 /**
@@ -94,4 +95,12 @@ void SysTick_Handler(void)
 void USART1_IRQHandler(void)
 {
     HAL_UART_IRQHandler(&huart1);
+}
+
+/**
+  * @brief This function handles SDIO global interrupt (TF card).
+  */
+void SDIO_IRQHandler(void)
+{
+    HAL_SD_IRQHandler(&hsd);
 }

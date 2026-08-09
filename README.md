@@ -13,8 +13,9 @@
 - **HAL/CMSIS 驱动**：`Drivers/`（STM32F1xx_HAL_Driver 全模块 + CMSIS Core + F1 器件头文件）
 - **启动文件**：`Startup/startup_stm32f103xe.s`（STM32F103xE 向量表）
 - **链接脚本**：`Linker/STM32F103ZETX_FLASH.ld`（512 KB Flash / 64 KB RAM）
-- **板级驱动 BSP**：LED（PB5/PE5）、按键（PE4/PE3/PA0）、蜂鸣器（PB8）、
-  USART1（PA9/PA10，printf 重定向到串口 115200-8N1）
+- **板级驱动 BSP**：LED、按键、蜂鸣器、USART1 printf（115200-8N1）、
+  24C02 EEPROM（I2C）、W25Q128 SPI Flash、光敏 ADC、DS18B20 单总线、
+  NEC 红外接收、RS485、CAN、SDIO TF 卡
 - **CMake 构建**：`cmake/toolchain-arm-none-eabi.cmake` + 顶层 `CMakeLists.txt`
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
 
@@ -36,8 +37,8 @@
 │       ├── stm32f1xx_it.c         # 中断服务函数
 │       └── system_stm32f1xx.c
 ├── BSP/                           # 板级驱动（按外设拆分）
-│   ├── Inc/  (led.h key.h beep.h usart.h)
-│   └── Src/  (led.c key.c beep.c usart.c)
+│   ├── Inc/  (led key beep usart eeprom w25qxx lsens onewire ir_nec rs485 can_bus sd_card bsp_dwt)
+│   └── Src/  (同名 .c)
 ├── Drivers/
 │   ├── CMSIS/
 │   └── STM32F1xx_HAL_Driver/
@@ -132,6 +133,25 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 3. 在外设初始化中遵循本模板的约定：**外设时钟/引脚/NVIC 放在
    `stm32f1xx_hal_msp.c` 的 `HAL_xxx_MspInit` 中**（与 STM32CubeMX 生成代码一致），
    BSP 只负责业务逻辑。
+
+## 板载外设驱动
+
+所有 BSP 模块都已接入正确的板载引脚与跳线配置，按需调用对应 `xxx_Init()` 即可：
+
+| 模块 | 头文件 | 板载资源 | 用法示例 |
+| --- | --- | --- | --- |
+| EEPROM | `eeprom.h` | 24C02 @ I2C1 (PB6/PB7) | `EEPROM_WriteByte(0, v)` / `EEPROM_ReadByte(0)` |
+| SPI Flash | `w25qxx.h` | W25Q128 @ SPI2 (PB12~15) | `W25QXX_ReadID()`；写前先 `W25QXX_EraseSector()` |
+| 光敏 | `lsens.h` | ADC3_IN6 (PF8) | `LSENS_ReadADC()` 返回 0~4095 |
+| 温度 | `onewire.h` | DS18B20 @ PG11 | `DS18B20_GetTemp()` 返回 0.01°C |
+| 红外 | `ir_nec.h` | LF0038 @ PB9 | 周期调用 `IR_GetKey()` 获取 NEC 码 |
+| RS485 | `rs485.h` | USART2 (PA2/PA3) + PD7 | `RS485_SendData()` / `RS485_ReceiveData()` |
+| CAN | `can_bus.h` | CAN1 (PA11/PA12) 500 kbit/s | `CAN1_SendMsg()` / `CAN1_ReceiveMsg()` |
+| TF 卡 | `sd_card.h` | SDIO 4-bit (PC8~12/PD2) | `SD_ReadBlocks()` / `SD_WriteBlocks()`，512 B/块 |
+
+使用前注意跳线帽：RS485 需短接 P5，CAN 需把 P6 拨到 CAN 档，
+NRF24L01 与 SPI Flash 共用 SPI2（片选互斥）。微秒级时序（单总线/红外）
+由 `bsp_dwt.h` 的 DWT 延时提供，无需额外外设。
 
 ## 板载外设引脚速查（摘自硬件参考手册）
 
