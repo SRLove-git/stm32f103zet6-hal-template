@@ -102,6 +102,17 @@ cmake --build --preset debug --target erase
 串口调试：USART1（PA9/PA10）通过跳线帽接到板载 CH340C，USB 连接电脑后
 用串口工具打开 **115200-8-N-1** 即可看到 printf 输出。
 
+### VS Code 调试
+
+1. 安装 [Cortex-Debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug)
+   扩展（打开工程时 VS Code 会按 `extensions.json` 提示安装推荐扩展）。
+2. 连接 ST-Link（SWD）并确认 OpenOCD 已在 PATH 中。
+3. 打开 `main.c`，按 `F5` 启动调试：会自动编译 Debug 固件 → 启动 OpenOCD →
+   进入 GDB 会话并停在 `main` 入口。
+
+常用任务（`Ctrl/Cmd+Shift+P` → “Tasks: Run Task”）：
+Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
+
 ## 如何基于模板新建项目
 
 0. 推荐直接使用一键脚本（自动复制并改名）：

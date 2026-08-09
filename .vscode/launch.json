@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug STM32 (OpenOCD/ST-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/debug/stm32f103zet6-hal-template",
+      "gdbPath": "arm-none-eabi-gdb",
+      "device": "STM32F103ZET6",
+      "interface": "swd",
+      "runToEntryPoint": "main",
+      "preLaunchTask": "Build (Debug)",
+      "serverArgs": [
+        "-f",
+        "interface/stlink.cfg",
+        "-c",
+        "transport select hdlc_swd",
+        "-f",
+        "target/stm32f1x.cfg"
+      ]
+    }
+  ]
+}

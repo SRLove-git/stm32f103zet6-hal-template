@@ -12,12 +12,15 @@ cmake-build-*/
 *.su
 
 # IDE / editor
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
 .idea/
 .DS_Store
 
 # Misc
 compile_commands.json
 *.log
-
 

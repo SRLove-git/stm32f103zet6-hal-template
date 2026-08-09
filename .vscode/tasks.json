@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Configure (Debug)",
+      "type": "shell",
+      "command": "cmake --preset debug",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build (Debug)",
+      "type": "shell",
+      "command": "cmake --build --preset debug",
+      "problemMatcher": ["$gcc"],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Clean + Build (Debug)",
+      "type": "shell",
+      "command": "cmake --build --preset debug --clean-first",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Flash (OpenOCD/ST-Link)",
+      "type": "shell",
+      "command": "cmake --build --preset debug --target flash",
+      "problemMatcher": []
+    }
+  ]
+}
