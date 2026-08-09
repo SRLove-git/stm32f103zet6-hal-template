@@ -1,14 +1,15 @@
 /**
-  * @file    lcdfont.c
-  * @brief   5x7 ASCII bitmap font used by the TFTLCD driver.
-  *
-  * Font data derived from the Adafruit GFX "classic" 5x7 font
-  * (https://github.com/adafruit/Adafruit-GFX-Library),
-  * distributed under the BSD-3-Clause license.
-  */
+ * @file    lcdfont.c
+ * @brief   5x7 ASCII bitmap font used by the TFTLCD driver.
+ *
+ * Font data derived from the Adafruit GFX "classic" 5x7 font
+ * (https://github.com/adafruit/Adafruit-GFX-Library),
+ * distributed under the BSD-3-Clause license.
+ */
 
 #include "lcdfont.h"
 
+// clang-format off
 const uint8_t lcd_font_5x7[95][5] = {
     {0x00,0x00,0x00,0x00,0x00},
     {0x00,0x00,0x5F,0x00,0x00},
@@ -106,3 +107,4 @@ const uint8_t lcd_font_5x7[95][5] = {
     {0x00,0x41,0x36,0x08,0x00},
     {0x02,0x01,0x02,0x04,0x02},
 };
+// clang-format on

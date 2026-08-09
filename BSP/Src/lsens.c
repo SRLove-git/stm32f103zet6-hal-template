@@ -1,9 +1,9 @@
 /**
-  ******************************************************************************
-  * @file    lsens.c
-  * @brief   Light sensor driver (polling single conversion).
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    lsens.c
+ * @brief   Light sensor driver (polling single conversion).
+ ******************************************************************************
+ */
 
 #include "lsens.h"
 
@@ -13,21 +13,21 @@ void LSENS_Init(void)
 {
     ADC_ChannelConfTypeDef sConfig = {0};
 
-    hadc3.Instance                   = LSENS_ADC;
-    hadc3.Init.ScanConvMode          = ADC_SCAN_DISABLE;
-    hadc3.Init.ContinuousConvMode    = DISABLE;
+    hadc3.Instance = LSENS_ADC;
+    hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
+    hadc3.Init.ContinuousConvMode = DISABLE;
     hadc3.Init.DiscontinuousConvMode = DISABLE;
-    hadc3.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
-    hadc3.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
-    hadc3.Init.NbrOfConversion       = 1;
+    hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    hadc3.Init.NbrOfConversion = 1;
 
     if (HAL_ADC_Init(&hadc3) != HAL_OK)
     {
         Error_Handler();
     }
 
-    sConfig.Channel      = LSENS_ADC_CHANNEL;
-    sConfig.Rank         = 1;
+    sConfig.Channel = LSENS_ADC_CHANNEL;
+    sConfig.Rank = 1;
     sConfig.SamplingTime = ADC_SAMPLETIME_55CYCLES_5;
     if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
     {

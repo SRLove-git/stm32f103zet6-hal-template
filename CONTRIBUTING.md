@@ -68,6 +68,9 @@ cmake -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release \
   - 私有函数/变量：`static`，必要时加 `p` 前缀避免与公共符号冲突。
 - 文件头：沿用现有 Doxygen 注释模板（`@file`、`@brief`，注明板级引脚）。
 - 头文件：必须有 include guard（`__XXX_H`），禁止在头文件里定义变量。
+- 格式化：提交前对 `Core/`、`BSP/` 运行 `clang-format -i`（配置见
+  `.clang-format`），CI 会执行 `clang-format --dry-run --Werror` 检查；
+  `Drivers/` 下第三方代码不参与格式化。
 - 外设初始化约定（与 STM32CubeMX 一致）：
   - **外设时钟、引脚、NVIC 配置放在 `Core/Src/stm32f1xx_hal_msp.c` 的
     `HAL_xxx_MspInit` 中**；

@@ -1,21 +1,21 @@
 /**
-  ******************************************************************************
-  * @file    stm32f1xx_hal_msp.c
-  * @brief   HAL MSP module (peripheral low-level initialization).
-  *
-  *          Follows the STM32CubeMX convention: MSP = MCU Support Package,
-  *          i.e. clocks, pins and NVIC belonging to each peripheral.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32f1xx_hal_msp.c
+ * @brief   HAL MSP module (peripheral low-level initialization).
+ *
+ *          Follows the STM32CubeMX convention: MSP = MCU Support Package,
+ *          i.e. clocks, pins and NVIC belonging to each peripheral.
+ ******************************************************************************
+ */
 
 #include "main.h"
 #include "sd_card.h"
 #include "usart.h"
 
 /**
-  * @brief Initializes the global MSP.
-  *        (AFIO/PWR clocks, interrupt priority grouping, SysTick priority)
-  */
+ * @brief Initializes the global MSP.
+ *        (AFIO/PWR clocks, interrupt priority grouping, SysTick priority)
+ */
 void HAL_MspInit(void)
 {
     __HAL_RCC_AFIO_CLK_ENABLE();
@@ -29,11 +29,11 @@ void HAL_MspInit(void)
 }
 
 /**
-  * @brief USART MSP Initialization.
-  *        USART1: PA9 (TX) / PA10 (RX), 115200-8N1, connected to CH340C
-  *        through the P3 jumpers on the Elite board.
-  */
-void HAL_UART_MspInit(UART_HandleTypeDef *huart)
+ * @brief USART MSP Initialization.
+ *        USART1: PA9 (TX) / PA10 (RX), 115200-8N1, connected to CH340C
+ *        through the P3 jumpers on the Elite board.
+ */
+void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -45,14 +45,14 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
         /* USART1 GPIO Configuration: PA9 -> TX (AF push-pull),
          *                            PA10 -> RX (floating input) */
-        GPIO_InitStruct.Pin       = GPIO_PIN_9;
-        GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-        GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStruct.Pin = GPIO_PIN_9;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-        GPIO_InitStruct.Pin       = GPIO_PIN_10;
-        GPIO_InitStruct.Mode      = GPIO_MODE_INPUT;
-        GPIO_InitStruct.Pull      = GPIO_NOPULL;
+        GPIO_InitStruct.Pin = GPIO_PIN_10;
+        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
         /* SysTick keeps priority 0; USART1 uses priority 1 */
@@ -65,22 +65,22 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         __HAL_RCC_USART2_CLK_ENABLE();
         __HAL_RCC_GPIOA_CLK_ENABLE();
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_2;
-        GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pin = GPIO_PIN_2;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_3;
-        GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-        GPIO_InitStruct.Pull  = GPIO_NOPULL;
+        GPIO_InitStruct.Pin = GPIO_PIN_3;
+        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
     }
 }
 
 /**
-  * @brief USART MSP De-Initialization.
-  */
-void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
+ * @brief USART MSP De-Initialization.
+ */
+void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 {
     if (huart->Instance == USART1)
     {
@@ -98,9 +98,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 }
 
 /**
-  * @brief I2C MSP Initialization. I2C1: PB6 (SCL) / PB7 (SDA), 24C02 EEPROM.
-  */
-void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
+ * @brief I2C MSP Initialization. I2C1: PB6 (SCL) / PB7 (SDA), 24C02 EEPROM.
+ */
+void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -109,18 +109,18 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
         __HAL_RCC_I2C1_CLK_ENABLE();
         __HAL_RCC_GPIOB_CLK_ENABLE();
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
-        GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;   /* open-drain, board pull-ups */
-        GPIO_InitStruct.Pull  = GPIO_NOPULL;
+        GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_OD; /* open-drain, board pull-ups */
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     }
 }
 
 /**
-  * @brief I2C MSP De-Initialization.
-  */
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)
+ * @brief I2C MSP De-Initialization.
+ */
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 {
     if (hi2c->Instance == I2C1)
     {
@@ -130,9 +130,9 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)
 }
 
 /**
-  * @brief SPI MSP Initialization. SPI2: PB13 (SCK) / PB14 (MISO) / PB15 (MOSI).
-  */
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
+ * @brief SPI MSP Initialization. SPI2: PB13 (SCK) / PB14 (MISO) / PB15 (MOSI).
+ */
+void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -141,22 +141,22 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
         __HAL_RCC_SPI2_CLK_ENABLE();
         __HAL_RCC_GPIOB_CLK_ENABLE();
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_13 | GPIO_PIN_15; /* SCK, MOSI */
-        GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pin = GPIO_PIN_13 | GPIO_PIN_15; /* SCK, MOSI */
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_14;               /* MISO */
-        GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-        GPIO_InitStruct.Pull  = GPIO_NOPULL;
+        GPIO_InitStruct.Pin = GPIO_PIN_14; /* MISO */
+        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     }
 }
 
 /**
-  * @brief SPI MSP De-Initialization.
-  */
-void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
+ * @brief SPI MSP De-Initialization.
+ */
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
 {
     if (hspi->Instance == SPI2)
     {
@@ -166,9 +166,9 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 }
 
 /**
-  * @brief ADC MSP Initialization. ADC3: PF8 (light sensor, IN6).
-  */
-void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
+ * @brief ADC MSP Initialization. ADC3: PF8 (light sensor, IN6).
+ */
+void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -177,16 +177,16 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
         __HAL_RCC_ADC3_CLK_ENABLE();
         __HAL_RCC_GPIOF_CLK_ENABLE();
 
-        GPIO_InitStruct.Pin  = GPIO_PIN_8;
+        GPIO_InitStruct.Pin = GPIO_PIN_8;
         GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
         HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
     }
 }
 
 /**
-  * @brief ADC MSP De-Initialization.
-  */
-void HAL_ADC_MspDeInit(ADC_HandleTypeDef *hadc)
+ * @brief ADC MSP De-Initialization.
+ */
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 {
     if (hadc->Instance == ADC3)
     {
@@ -196,9 +196,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef *hadc)
 }
 
 /**
-  * @brief CAN MSP Initialization. CAN1: PA11 (RX) / PA12 (TX), P6 = CAN.
-  */
-void HAL_CAN_MspInit(CAN_HandleTypeDef *hcan)
+ * @brief CAN MSP Initialization. CAN1: PA11 (RX) / PA12 (TX), P6 = CAN.
+ */
+void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -207,22 +207,22 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef *hcan)
         __HAL_RCC_CAN1_CLK_ENABLE();
         __HAL_RCC_GPIOA_CLK_ENABLE();
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_11;               /* RX */
-        GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-        GPIO_InitStruct.Pull  = GPIO_NOPULL;
+        GPIO_InitStruct.Pin = GPIO_PIN_11; /* RX */
+        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_12;               /* TX */
-        GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pin = GPIO_PIN_12; /* TX */
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
     }
 }
 
 /**
-  * @brief CAN MSP De-Initialization.
-  */
-void HAL_CAN_MspDeInit(CAN_HandleTypeDef *hcan)
+ * @brief CAN MSP De-Initialization.
+ */
+void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
 {
     if (hcan->Instance == CAN1)
     {
@@ -232,9 +232,9 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef *hcan)
 }
 
 /**
-  * @brief SDIO MSP Initialization: PC8..PC11 (D0..D3), PC12 (CK), PD2 (CMD).
-  */
-void HAL_SD_MspInit(SD_HandleTypeDef *hsdi)
+ * @brief SDIO MSP Initialization: PC8..PC11 (D0..D3), PC12 (CK), PD2 (CMD).
+ */
+void HAL_SD_MspInit(SD_HandleTypeDef* hsdi)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -244,13 +244,12 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsdi)
         __HAL_RCC_GPIOC_CLK_ENABLE();
         __HAL_RCC_GPIOD_CLK_ENABLE();
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
-                               GPIO_PIN_11 | GPIO_PIN_12;
-        GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-        GPIO_InitStruct.Pin   = GPIO_PIN_2;
+        GPIO_InitStruct.Pin = GPIO_PIN_2;
         HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
         HAL_NVIC_SetPriority(SDIO_IRQn, 2, 0);
@@ -259,15 +258,14 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsdi)
 }
 
 /**
-  * @brief SDIO MSP De-Initialization.
-  */
-void HAL_SD_MspDeInit(SD_HandleTypeDef *hsdi)
+ * @brief SDIO MSP De-Initialization.
+ */
+void HAL_SD_MspDeInit(SD_HandleTypeDef* hsdi)
 {
     if (hsdi->Instance == SDIO)
     {
         __HAL_RCC_SDIO_CLK_DISABLE();
-        HAL_GPIO_DeInit(GPIOC, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
-                               GPIO_PIN_11 | GPIO_PIN_12);
+        HAL_GPIO_DeInit(GPIOC, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
         HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
         HAL_NVIC_DisableIRQ(SDIO_IRQn);
     }

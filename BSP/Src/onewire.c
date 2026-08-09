@@ -1,16 +1,16 @@
 /**
-  ******************************************************************************
-  * @file    onewire.c
-  * @brief   One-wire + DS18B20 driver (bit-banged, polling).
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    onewire.c
+ * @brief   One-wire + DS18B20 driver (bit-banged, polling).
+ ******************************************************************************
+ */
 
 #include "onewire.h"
 #include "bsp_dwt.h"
 
-#define OW_CMD_SKIP_ROM      0xCCU
-#define OW_CMD_CONVERT_T     0x44U
-#define OW_CMD_READ_SCRATCH  0xBEU
+#define OW_CMD_SKIP_ROM 0xCCU
+#define OW_CMD_CONVERT_T 0x44U
+#define OW_CMD_READ_SCRATCH 0xBEU
 
 static void OW_WriteByte(uint8_t byte);
 static uint8_t OW_ReadByte(void);
@@ -22,7 +22,7 @@ void OW_Init(void)
     __HAL_RCC_GPIOG_CLK_ENABLE();
     BSP_DWT_DelayInit();
 
-    GPIO_InitStruct.Pin  = OW_PIN;
+    GPIO_InitStruct.Pin = OW_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD; /* open-drain: external 4.7k pull-up */
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -34,9 +34,9 @@ static void OW_SetOutput(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    GPIO_InitStruct.Pin   = OW_PIN;
-    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Pin = OW_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(OW_PORT, &GPIO_InitStruct);
 }
@@ -45,7 +45,7 @@ static void OW_SetInput(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    GPIO_InitStruct.Pin  = OW_PIN;
+    GPIO_InitStruct.Pin = OW_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(OW_PORT, &GPIO_InitStruct);

@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install clang-format 18
+        run: sudo apt-get update && sudo apt-get install -y clang-format-18
+
+      - name: Check Core/BSP formatting
+        run: |
+          set -euo pipefail
+          files=$(find Core BSP \( -name '*.c' -o -name '*.h' \) | sort)
+          clang-format-18 --dry-run --Werror ${files}
+
   build:
     runs-on: ubuntu-latest
     strategy:

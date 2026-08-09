@@ -1,24 +1,24 @@
 /**
-  ******************************************************************************
-  * @file    ir_nec.c
-  * @brief   NEC IR protocol decoder (bit-banged).
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    ir_nec.c
+ * @brief   NEC IR protocol decoder (bit-banged).
+ ******************************************************************************
+ */
 
 #include "ir_nec.h"
 #include "bsp_dwt.h"
 
-#define IR_ACTIVE  GPIO_PIN_RESET   /* receiver output is low when signal arrives */
+#define IR_ACTIVE GPIO_PIN_RESET /* receiver output is low when signal arrives */
 
 /* Timing windows (us) */
-#define IR_START_LOW_MIN   8000U
-#define IR_START_LOW_MAX   11000U
-#define IR_START_HIGH_MIN  3000U
-#define IR_START_HIGH_MAX  6500U
-#define IR_BIT_LOW_MAX     1400U
-#define IR_BIT_HIGH_0_MAX  1200U
-#define IR_BIT_HIGH_1_MIN  1500U
-#define IR_BIT_HIGH_1_MAX  2200U
+#define IR_START_LOW_MIN 8000U
+#define IR_START_LOW_MAX 11000U
+#define IR_START_HIGH_MIN 3000U
+#define IR_START_HIGH_MAX 6500U
+#define IR_BIT_LOW_MAX 1400U
+#define IR_BIT_HIGH_0_MAX 1200U
+#define IR_BIT_HIGH_1_MIN 1500U
+#define IR_BIT_HIGH_1_MAX 2200U
 
 static uint32_t IR_WaitLevel(GPIO_PinState level, uint32_t timeout_us)
 {
@@ -42,7 +42,7 @@ void IR_Init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     BSP_DWT_DelayInit();
 
-    GPIO_InitStruct.Pin  = IR_PIN;
+    GPIO_InitStruct.Pin = IR_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_PULLUP; /* idle high */
     HAL_GPIO_Init(IR_PORT, &GPIO_InitStruct);

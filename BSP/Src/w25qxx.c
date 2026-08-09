@@ -1,24 +1,24 @@
 /**
-  ******************************************************************************
-  * @file    w25qxx.c
-  * @brief   W25Q128 SPI Flash driver.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    w25qxx.c
+ * @brief   W25Q128 SPI Flash driver.
+ ******************************************************************************
+ */
 
 #include "w25qxx.h"
 
 SPI_HandleTypeDef hspi2;
 
 /* Command set (W25Q series) */
-#define W25X_CMD_WRITE_ENABLE   0x06U
-#define W25X_CMD_READ_STATUS    0x05U
-#define W25X_CMD_READ_DATA      0x03U
-#define W25X_CMD_PAGE_PROGRAM   0x02U
-#define W25X_CMD_SECTOR_ERASE   0x20U
-#define W25X_CMD_CHIP_ERASE     0xC7U
-#define W25X_CMD_READ_JEDEC_ID  0x9FU
+#define W25X_CMD_WRITE_ENABLE 0x06U
+#define W25X_CMD_READ_STATUS 0x05U
+#define W25X_CMD_READ_DATA 0x03U
+#define W25X_CMD_PAGE_PROGRAM 0x02U
+#define W25X_CMD_SECTOR_ERASE 0x20U
+#define W25X_CMD_CHIP_ERASE 0xC7U
+#define W25X_CMD_READ_JEDEC_ID 0x9FU
 
-#define W25X_STATUS_BUSY        0x01U
+#define W25X_STATUS_BUSY 0x01U
 
 static void W25QXX_CS_Low(void)
 {
@@ -67,25 +67,25 @@ void W25QXX_Init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
     /* CS: plain GPIO output, idle high */
-    GPIO_InitStruct.Pin  = W25QXX_CS_PIN;
+    GPIO_InitStruct.Pin = W25QXX_CS_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(W25QXX_CS_PORT, &GPIO_InitStruct);
     W25QXX_CS_High();
 
-    hspi2.Instance               = W25QXX_SPI;
-    hspi2.Init.Mode              = SPI_MODE_MASTER;
-    hspi2.Init.Direction         = SPI_DIRECTION_2LINES;
-    hspi2.Init.DataSize          = SPI_DATASIZE_8BIT;
-    hspi2.Init.CLKPolarity       = SPI_POLARITY_LOW;
-    hspi2.Init.CLKPhase          = SPI_PHASE_1EDGE;
-    hspi2.Init.NSS               = SPI_NSS_SOFT;
-    hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;   /* 18 MHz @ APB1 36 MHz */
-    hspi2.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-    hspi2.Init.TIMode            = SPI_TIMODE_DISABLE;
-    hspi2.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-    hspi2.Init.CRCPolynomial     = 10U;
+    hspi2.Instance = W25QXX_SPI;
+    hspi2.Init.Mode = SPI_MODE_MASTER;
+    hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+    hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+    hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+    hspi2.Init.NSS = SPI_NSS_SOFT;
+    hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; /* 18 MHz @ APB1 36 MHz */
+    hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+    hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    hspi2.Init.CRCPolynomial = 10U;
 
     if (HAL_SPI_Init(&hspi2) != HAL_OK)
     {
@@ -99,7 +99,7 @@ uint32_t W25QXX_ReadID(void)
 
     W25QXX_CS_Low();
     (void)W25QXX_SpiByte(W25X_CMD_READ_JEDEC_ID);
-    id  = (uint32_t)W25QXX_SpiByte(0xFFU) << 16U;
+    id = (uint32_t)W25QXX_SpiByte(0xFFU) << 16U;
     id |= (uint32_t)W25QXX_SpiByte(0xFFU) << 8U;
     id |= (uint32_t)W25QXX_SpiByte(0xFFU);
     W25QXX_CS_High();
@@ -107,7 +107,7 @@ uint32_t W25QXX_ReadID(void)
     return id;
 }
 
-void W25QXX_ReadData(uint32_t addr, uint8_t *buf, uint32_t len)
+void W25QXX_ReadData(uint32_t addr, uint8_t* buf, uint32_t len)
 {
     W25QXX_CS_Low();
     (void)W25QXX_SpiByte(W25X_CMD_READ_DATA);
@@ -122,7 +122,7 @@ void W25QXX_ReadData(uint32_t addr, uint8_t *buf, uint32_t len)
     W25QXX_CS_High();
 }
 
-HAL_StatusTypeDef W25QXX_WriteData(uint32_t addr, const uint8_t *buf, uint32_t len)
+HAL_StatusTypeDef W25QXX_WriteData(uint32_t addr, const uint8_t* buf, uint32_t len)
 {
     uint32_t i;
 
@@ -151,7 +151,7 @@ HAL_StatusTypeDef W25QXX_WriteData(uint32_t addr, const uint8_t *buf, uint32_t l
         W25QXX_WaitBusy();
 
         addr += chunk;
-        len  -= chunk;
+        len -= chunk;
     }
 
     return HAL_OK;

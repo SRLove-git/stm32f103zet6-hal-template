@@ -1,9 +1,9 @@
 /**
-  ******************************************************************************
-  * @file    bsp_dwt.c
-  * @brief   DWT-based microsecond delay implementation.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    bsp_dwt.c
+ * @brief   DWT-based microsecond delay implementation.
+ ******************************************************************************
+ */
 
 #include "bsp_dwt.h"
 
@@ -13,7 +13,7 @@ void BSP_DWT_DelayInit(void)
 {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0U;
-    DWT->CTRL  |= DWT_CTRL_CYCCNTENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
     dwt_ready = 1U;
 }
 
