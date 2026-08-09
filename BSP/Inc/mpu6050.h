@@ -3,13 +3,17 @@
  * @file    mpu6050.h
  * @brief   ATK-MPU6050 six-axis sensor driver (ATK module interface).
  *
- *          On the Elite board the module plugs into the ATK MODULE socket:
- *            IIC_SCL - PB10 (GBC_RX) | IIC_SDA - PB11 (GBC_TX)
+ *          On the Elite board the module plugs into the ATK MODULE socket.
+ *          Measured on hardware (silkscreen order differs from the manual):
+ *            IIC_SCL - PB11 (GBC_TX) | IIC_SDA - PB10 (GBC_RX)
  *            MPU_INT - PA4  (GBC_KEY) | MPU_AD0 - PA15 (GBC_LED, optional)
  *
  *          The module has 4.7k I2C pull-ups and a 10k AD0 pull-down, so the
- *          slave address is 0x68 by default. Communication uses a bit-banged
- *          I2C (software), as STM32F1 hardware I2C is notoriously quirky.
+ *          slave address is 0x68 by default. The chip reports WHO_AM_I 0x68
+ *          (MPU6050), 0x69 (AD0 high) or 0x70 (MPU6500-compatible), all with
+ *          the same register map for accel/gyro/temperature.
+ *          Communication uses bit-banged I2C (software), as STM32F1
+ *          hardware I2C is notoriously quirky.
  ******************************************************************************
  */
 

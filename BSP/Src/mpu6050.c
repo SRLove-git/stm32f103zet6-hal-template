@@ -22,9 +22,12 @@
 #define MPU6050_GYRO_SCALE 0.06103515625f  /* 2000.0f / 32768 */
 
 #define MPU_SCL_PORT GPIOB
-#define MPU_SCL_PIN GPIO_PIN_10
+#define MPU_SCL_PIN GPIO_PIN_11
 #define MPU_SDA_PORT GPIOB
-#define MPU_SDA_PIN GPIO_PIN_11
+#define MPU_SDA_PIN GPIO_PIN_10
+
+/* Detected slave address (0x68 or 0x69 depending on AD0) */
+static uint8_t mpu_addr = MPU6050_ADDR;
 
 static void MPU_I2C_Delay(void)
 {
@@ -140,7 +143,7 @@ static uint8_t MPU6050_WriteReg(uint8_t reg, uint8_t value)
     uint8_t ok;
 
     MPU_I2C_Start();
-    MPU_I2C_SendByte((uint8_t)(MPU6050_ADDR << 1U));
+    MPU_I2C_SendByte((uint8_t)(mpu_addr << 1U));
     ok = MPU_I2C_WaitAck();
     if (ok != 0U)
     {
@@ -164,14 +167,14 @@ static uint8_t MPU6050_ReadReg(uint8_t reg)
     uint8_t value = 0xFFU;
 
     MPU_I2C_Start();
-    MPU_I2C_SendByte((uint8_t)(MPU6050_ADDR << 1U));
+    MPU_I2C_SendByte((uint8_t)(mpu_addr << 1U));
     if (MPU_I2C_WaitAck() != 0U)
     {
         MPU_I2C_SendByte(reg);
         if (MPU_I2C_WaitAck() != 0U)
         {
             MPU_I2C_Start();
-            MPU_I2C_SendByte((uint8_t)((MPU6050_ADDR << 1U) | 1U));
+            MPU_I2C_SendByte((uint8_t)((mpu_addr << 1U) | 1U));
             if (MPU_I2C_WaitAck() != 0U)
             {
                 value = MPU_I2C_RecvByte();
@@ -192,14 +195,14 @@ static uint8_t MPU6050_ReadBuf(uint8_t reg, uint8_t* buf, uint8_t len)
     uint8_t ok = 0U;
 
     MPU_I2C_Start();
-    MPU_I2C_SendByte((uint8_t)(MPU6050_ADDR << 1U));
+    MPU_I2C_SendByte((uint8_t)(mpu_addr << 1U));
     if (MPU_I2C_WaitAck() != 0U)
     {
         MPU_I2C_SendByte(reg);
         if (MPU_I2C_WaitAck() != 0U)
         {
             MPU_I2C_Start();
-            MPU_I2C_SendByte((uint8_t)((MPU6050_ADDR << 1U) | 1U));
+            MPU_I2C_SendByte((uint8_t)((mpu_addr << 1U) | 1U));
             if (MPU_I2C_WaitAck() != 0U)
             {
                 for (i = 0U; i < len; i++)
@@ -218,6 +221,11 @@ static uint8_t MPU6050_ReadBuf(uint8_t reg, uint8_t* buf, uint8_t len)
 uint8_t MPU6050_ReadID(void)
 {
     return MPU6050_ReadReg(MPU6050_REG_WHO_AM_I);
+}
+
+static uint8_t MPU6050_IsValidID(uint8_t id)
+{
+    return (id == 0x68U) || (id == 0x69U) || (id == 0x70U);
 }
 
 uint8_t MPU6050_Init(void)
@@ -245,11 +253,20 @@ uint8_t MPU6050_Init(void)
     (void)MPU6050_WriteReg(MPU6050_REG_GYRO_CONFIG, 0x18U);  /* +-2000 dps */
     (void)MPU6050_WriteReg(MPU6050_REG_ACCEL_CONFIG, 0x18U); /* +-16 g */
 
-    if (MPU6050_ReadID() != 0x68U)
+    /* Probe WHO_AM_I at both possible slave addresses (AD0 dependent). */
+    if (MPU6050_IsValidID(MPU6050_ReadID()) != 0U)
     {
-        return 1U; /* module not present */
+        mpu_addr = 0x68U;
+        return 0U;
     }
-    return 0U;
+    mpu_addr = 0x69U;
+    if (MPU6050_IsValidID(MPU6050_ReadID()) != 0U)
+    {
+        return 0U;
+    }
+
+    mpu_addr = MPU6050_ADDR;
+    return 1U; /* module not present */
 }
 
 void MPU6050_ReadRaw(int16_t accel[3], int16_t gyro[3], int16_t* temp)

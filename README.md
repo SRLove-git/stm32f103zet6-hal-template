@@ -155,7 +155,7 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 | CAN | `can_bus.h` | CAN1 (PA11/PA12) 500 kbit/s | `CAN1_SendMsg()` / `CAN1_ReceiveMsg()` |
 | TF 卡 | `sd_card.h` | SDIO 4-bit (PC8~12/PD2) | `SD_ReadBlocks()` / `SD_WriteBlocks()`，512 B/块 |
 | TFTLCD | `lcd.h` | FSMC NE4/A10，16 位数据线，PB0 背光 | `LCD_Init()` 后 `LCD_Clear()` / `LCD_ShowString()` 等 |
-| MPU6050 | `mpu6050.h` | ATK 模块接口（SCL=PB10 / SDA=PB11，软件 I2C）| `MPU6050_Init()` 后读 `MPU6050_ReadAccelG()` 等 |
+| MPU6050 | `mpu6050.h` | ATK 模块接口（实测 SCL=PB11 / SDA=PB10，软件 I2C）| `MPU6050_Init()` 后读 `MPU6050_ReadAccelG()` 等 |
 
 使用前注意跳线帽：RS485 需短接 P5，CAN 需把 P6 拨到 CAN 档，
 NRF24L01 与 SPI Flash 共用 SPI2（片选互斥）。微秒级时序（单总线/红外）
@@ -183,7 +183,7 @@ ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖
 | CAN | 内部回环收发 | PASS |
 | TF 卡 | 初始化 + 读块 0 | 无卡显示 SKIP |
 | TFTLCD | 读控制器 ID + 像素读回 | ID 为 0x93xx（ILI9341 系列，面板差异，仅供参考）|
-| MPU6050 | WHO_AM_I + 加速度读数 | 未插模块显示 SKIP |
+| MPU6050 | WHO_AM_I（0x68/0x69/0x70）+ 加速度读数 | 未插模块显示 SKIP |
 
 自检结束后进入正常的 LED/按键/蜂鸣器演示。不需要自检时，删除
 `main()` 里的 `BSP_SelfTest()` 调用即可。

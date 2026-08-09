@@ -154,14 +154,16 @@ static void SelfTest_MPU6050(void)
     int16_t gyro[3];
     int16_t temp;
 
-    printf("[MPU6050] ATK module I/F (SCL=PB10, SDA=PB11)\r\n");
+    printf("[MPU6050] ATK module I/F (SCL=PB11, SDA=PB10)\r\n");
     if (MPU6050_Init() != 0U)
     {
-        printf("  [SKIP] module not detected (WHO_AM_I != 0x68)\r\n");
+        printf("  [SKIP] module not detected\r\n");
         return;
     }
 
-    SELFTEST_CHECK(MPU6050_ReadID() == 0x68U, "WHO_AM_I = 0x68");
+    SELFTEST_CHECK((MPU6050_ReadID() == 0x68U) || (MPU6050_ReadID() == 0x69U) ||
+                       (MPU6050_ReadID() == 0x70U),
+                   "WHO_AM_I valid (0x68/0x69/0x70)");
 
     MPU6050_ReadRaw(accel, gyro, &temp);
     printf("  acc = %d, %d, %d | gyro = %d, %d, %d | temp = %d\r\n", (int)accel[0], (int)accel[1],
