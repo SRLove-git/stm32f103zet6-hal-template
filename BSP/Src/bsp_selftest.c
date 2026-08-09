@@ -15,6 +15,7 @@
 #include "lcd.h"
 #include "lsens.h"
 #include "mpu6050.h"
+#include "oled.h"
 #include "onewire.h"
 #include "rs485.h"
 #include "sd_card.h"
@@ -172,6 +173,17 @@ static void SelfTest_MPU6050(void)
                    "accel data non-zero (static: Z ~ +1 g)");
 }
 
+static void SelfTest_OLED(void)
+{
+    printf("[OLED] SSD1306 0.96\" @ P4 (8080 parallel)\r\n");
+    OLED_Init();
+    OLED_Clear(0U);
+    OLED_ShowString(0U, 0U, 1U, "BSP Self-Test");
+    OLED_ShowString(0U, 16U, 1U, "OLED: OK");
+    OLED_Refresh();
+    printf("  [INFO] init done - text should be visible on the module\r\n");
+}
+
 static void SelfTest_CAN(void)
 {
     printf("[CAN] CAN1 @ PA11/PA12 (loopback)\r\n");
@@ -237,6 +249,7 @@ void BSP_SelfTest(void)
     SelfTest_IR();
     SelfTest_RS485();
     SelfTest_MPU6050();
+    SelfTest_OLED();
     SelfTest_CAN();
     SelfTest_SD();
     SelfTest_LCD();

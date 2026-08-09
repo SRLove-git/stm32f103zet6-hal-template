@@ -156,6 +156,7 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 | TF 卡 | `sd_card.h` | SDIO 4-bit (PC8~12/PD2) | `SD_ReadBlocks()` / `SD_WriteBlocks()`，512 B/块 |
 | TFTLCD | `lcd.h` | FSMC NE4/A10，16 位数据线，PB0 背光 | `LCD_Init()` 后 `LCD_Clear()` / `LCD_ShowString()` 等 |
 | MPU6050 | `mpu6050.h` | ATK 模块接口（实测 SCL=PB11 / SDA=PB10，软件 I2C）| `MPU6050_Init()` 后读 `MPU6050_ReadAccelG()` 等 |
+| OLED | `oled.h` | P4 接口，8080 并口（DC=PD3 / CS=PD6 / WR=PG14 / RST=PG15 / D0~7=PC0~7）| `OLED_Init()` 后 `OLED_ShowString()` + `OLED_Refresh()` |
 
 使用前注意跳线帽：RS485 需短接 P5，CAN 需把 P6 拨到 CAN 档，
 NRF24L01 与 SPI Flash 共用 SPI2（片选互斥）。微秒级时序（单总线/红外）
@@ -166,6 +167,11 @@ TFTLCD 说明：预配置为 2.8 寸 **ILI9341 系列**（`LCD_GetID()` 应返�
 ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖屏切换
 （`LCD_SetDirection()`）。3.5/4.3/7 寸屏需在 `LCD_InitSequence()` 中补充对应
 控制器的初始化序列。
+
+OLED 说明：ATK-0.96 寸 SSD1306 模块以 **8080 并口模式**（模块默认 BS1/BS2 焊盘）
+靠左插入 P4 接口；与摄像头共用数据线，二者不同时使用。P4 的摄像头信号
+（OV_WEN=PB3、OV_RCLK=PB4、OV_VSYNC=PA8 及 D0~7）留给 OV7670/OV7725
+摄像头模块，摄像头驱动未包含在本模板中。
 
 ## 开机自检（BSP Self-Test）
 
@@ -184,6 +190,7 @@ ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖
 | TF 卡 | 初始化 + 读块 0 | 无卡显示 SKIP |
 | TFTLCD | 读控制器 ID + 像素读回 | ID 为 0x93xx（ILI9341 系列，面板差异，仅供参考）|
 | MPU6050 | WHO_AM_I（0x68/0x69/0x70）+ 加速度读数 | 未插模块显示 SKIP |
+| OLED | 初始化和写入 | INFO（并口无回读，屏幕上可见文字即正常）|
 
 自检结束后进入正常的 LED/按键/蜂鸣器演示。不需要自检时，删除
 `main()` 里的 `BSP_SelfTest()` 调用即可。
