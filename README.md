@@ -55,6 +55,18 @@
 
 ## 构建
 
+推荐使用 CMake Presets（配置命令已固化，IDE 也能直接识别）：
+
+```bash
+cmake --preset debug      # 首次配置 + 后续重新配置
+cmake --build --preset debug
+```
+
+Release 同理：`cmake --preset release && cmake --build --preset release`。
+产物在 `build/debug/` 或 `build/release/` 下。
+
+也可以手动指定配置：
+
 ```bash
 # 首次配置（Debug 默认；也可 -DCMAKE_BUILD_TYPE=Release）
 cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cmake
@@ -67,7 +79,7 @@ cmake --build build
 > 可在配置阶段加 `-DUSE_NEWLIB_NANO=ON`（改用体积更小的 newlib-nano，
 > 并自动保留 `%f` 支持，额外占用几 KB Flash）。
 
-产物位于 `build/`：
+产物位于 `build/debug/`（或手动配置时的 `build/`）：
 
 - `stm32f103zet6-hal-template.elf` / `.hex` / `.bin`
 - `stm32f103zet6-hal-template.map`（链接映射）
@@ -76,10 +88,10 @@ cmake --build build
 
 ```bash
 # 通过 OpenOCD + ST-Link（SWD）烧录并复位运行
-cmake --build build --target flash
+cmake --build --preset debug --target flash
 
 # 全片擦除
-cmake --build build --target erase
+cmake --build --preset debug --target erase
 ```
 
 如果使用 DAP 仿真器，把 `CMakeLists.txt` 中 `flash`/`erase` 目标的
