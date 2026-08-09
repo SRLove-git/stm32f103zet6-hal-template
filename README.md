@@ -181,7 +181,7 @@ ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖
 | RS485 | 串口初始化 | INFO（需 P5 跳线 + 对端节点）|
 | CAN | 内部回环收发 | PASS |
 | TF 卡 | 初始化 + 读块 0 | 无卡显示 SKIP |
-| TFTLCD | 读控制器 ID | 0x9341（ILI9341）|
+| TFTLCD | 读控制器 ID + 像素读回 | ID 为 0x93xx（ILI9341 系列，面板差异，仅供参考）|
 
 自检结束后进入正常的 LED/按键/蜂鸣器演示。不需要自检时，删除
 `main()` 里的 `BSP_SelfTest()` 调用即可。

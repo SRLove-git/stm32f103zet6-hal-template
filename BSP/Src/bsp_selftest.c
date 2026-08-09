@@ -175,6 +175,7 @@ static void SelfTest_SD(void)
 static void SelfTest_LCD(void)
 {
     uint16_t id;
+    uint16_t px;
 
     printf("[TFTLCD] FSMC NE4/A10\r\n");
     LCD_Init();
@@ -182,6 +183,12 @@ static void SelfTest_LCD(void)
     id = LCD_GetID();
     printf("  LCD ID = 0x%04X (expect 0x9341 for ILI9341)\r\n", id);
     SELFTEST_CHECK((id != 0x0000U) && (id != 0xFFFFU), "ID readable");
+
+    /* GRAM read-back is unreliable on this panel family (18-bit byte stream);
+     * keep it informational instead of a hard check. */
+    LCD_DrawPoint(0U, 0U, LCD_BLACK);
+    px = LCD_GetPoint(0U, 0U);
+    printf("  pixel read-back = 0x%04X (informational; panel GRAM read quirk)\r\n", px);
 
     LCD_ShowString(10U, 10U, 2U, "BSP Self-Test", LCD_BLACK, LCD_WHITE);
     if (selftest_failed == 0U)

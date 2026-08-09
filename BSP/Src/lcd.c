@@ -86,7 +86,7 @@ static void LCD_FSMC_Init(void)
     /* Timing (2.8" ILI9341 @ 72 MHz HCLK; see RM0008 FSMC section) */
     timing.AddressSetupTime = 1U;
     timing.AddressHoldTime = 0U;
-    timing.DataSetupTime = 3U;
+    timing.DataSetupTime = 3U; /* ALIENTEK-standard timing for 2.8" ILI9341 */
     timing.BusTurnAroundDuration = 0U;
     timing.CLKDivision = 0U;
     timing.DataLatency = 0U;
@@ -113,6 +113,10 @@ static void LCD_FSMC_Init(void)
     {
         Error_Handler();
     }
+
+    /* The F1 LL driver clears MBKEN during init and never re-enables it;
+     * without this, accesses to the NE4 region trigger a bus fault. */
+    __FSMC_NORSRAM_ENABLE(FSMC_NORSRAM_DEVICE, FSMC_NORSRAM_BANK4);
 }
 
 /**
