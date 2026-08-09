@@ -17,7 +17,7 @@
         "-f",
         "interface/stlink.cfg",
         "-c",
-        "transport select hdlc_swd",
+        "transport select hla_swd",
         "-f",
         "target/stm32f1x.cfg"
       ]

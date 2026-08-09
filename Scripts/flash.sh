@@ -15,7 +15,7 @@ PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROBE="${1:-${STM32_DEBUG_PROBE:-stlink}}"
 case "${PROBE}" in
     stlink)
-        PROBE_ARGS=(-f interface/stlink.cfg -c "transport select hdlc_swd")
+        PROBE_ARGS=(-f interface/stlink.cfg -c "transport select hla_swd")
         ;;
     cmsis-dap)
         PROBE_ARGS=(-f interface/cmsis-dap.cfg)

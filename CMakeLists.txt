@@ -110,7 +110,7 @@ if(OPENOCD)
 
     if(STM32_DEBUG_PROBE STREQUAL "stlink")
         set(OPENOCD_PROBE_ARGS -f interface/stlink.cfg
-                               -c "transport select hdlc_swd")
+                               -c "transport select hla_swd")
     elseif(STM32_DEBUG_PROBE STREQUAL "cmsis-dap")
         set(OPENOCD_PROBE_ARGS -f interface/cmsis-dap.cfg)
     else()
