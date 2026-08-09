@@ -15,6 +15,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type (Debug/Release/MinSizeRel)" FORCE)
 endif()
 
+# Use newlib-nano instead of the full newlib C library.
+# - OFF (default): full newlib, printf() supports %f out of the box.
+# - ON: smaller libc; float printf is kept by forcing _printf_float in.
+option(USE_NEWLIB_NANO "Use newlib-nano (smaller binary, keeps %f support)" OFF)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
@@ -71,6 +76,15 @@ target_link_options(${PROJECT_NAME} PRIVATE
     -Wl,--no-warn-rwx-segments
     "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map"
     "-T${LINKER_SCRIPT}")
+
+if(USE_NEWLIB_NANO)
+    # Keep %f/%e/%g working under newlib-nano. The symbol must be passed to
+    # the linker as separate -u / _printf_float arguments (a single
+    # "-u _printf_float" token would be parsed as symbol " _printf_float").
+    target_link_options(${PROJECT_NAME} PRIVATE
+        --specs=nano.specs
+        -Wl,-u,_printf_float)
+endif()
 
 # -----------------------------------------------------------------------------
 # Post-build artifacts: .hex / .bin + size report

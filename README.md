@@ -63,6 +63,10 @@ cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cma
 cmake --build build
 ```
 
+> 默认链接完整 newlib，printf 直接支持浮点（`%f`）。想进一步缩小固件体积，
+> 可在配置阶段加 `-DUSE_NEWLIB_NANO=ON`（改用体积更小的 newlib-nano，
+> 并自动保留 `%f` 支持，额外占用几 KB Flash）。
+
 产物位于 `build/`：
 
 - `stm32f103zet6-hal-template.elf` / `.hex` / `.bin`
