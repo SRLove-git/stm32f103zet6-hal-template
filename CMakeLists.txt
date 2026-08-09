@@ -104,16 +104,29 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 # -----------------------------------------------------------------------------
 find_program(OPENOCD openocd)
 if(OPENOCD)
+    set(STM32_DEBUG_PROBE "stlink" CACHE STRING
+        "OpenOCD debug probe: stlink (default) or cmsis-dap")
+    set_property(CACHE STM32_DEBUG_PROBE PROPERTY STRINGS stlink cmsis-dap)
+
+    if(STM32_DEBUG_PROBE STREQUAL "stlink")
+        set(OPENOCD_PROBE_ARGS -f interface/stlink.cfg
+                               -c "transport select hdlc_swd")
+    elseif(STM32_DEBUG_PROBE STREQUAL "cmsis-dap")
+        set(OPENOCD_PROBE_ARGS -f interface/cmsis-dap.cfg)
+    else()
+        message(FATAL_ERROR
+            "Unsupported STM32_DEBUG_PROBE '${STM32_DEBUG_PROBE}' "
+            "(use stlink or cmsis-dap)")
+    endif()
+
     add_custom_target(flash
-        COMMAND ${OPENOCD} -f interface/stlink.cfg -c "transport select hdlc_swd"
-                -f target/stm32f1x.cfg
+        COMMAND ${OPENOCD} ${OPENOCD_PROBE_ARGS} -f target/stm32f1x.cfg
                 -c "program $<TARGET_FILE:${PROJECT_NAME}> verify reset exit"
         DEPENDS ${PROJECT_NAME}
-        COMMENT "Flashing ${PROJECT_NAME}.elf via OpenOCD/ST-Link (SWD)"
+        COMMENT "Flashing ${PROJECT_NAME}.elf via OpenOCD (${STM32_DEBUG_PROBE})"
         VERBATIM)
     add_custom_target(erase
-        COMMAND ${OPENOCD} -f interface/stlink.cfg -c "transport select hdlc_swd"
-                -f target/stm32f1x.cfg
+        COMMAND ${OPENOCD} ${OPENOCD_PROBE_ARGS} -f target/stm32f1x.cfg
                 -c "init; halt; stm32f1x mass_erase 0; exit"
         COMMENT "Mass-erasing STM32F103 flash via OpenOCD"
         VERBATIM)

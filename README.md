@@ -1,6 +1,7 @@
 # STM32F103ZET6 HAL 工程模板（正点原子精英板）
 
 [![CI](https://github.com/SRLove-git/stm32f103zet6-hal-template/actions/workflows/ci.yml/badge.svg)](https://github.com/SRLove-git/stm32f103zet6-hal-template/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 基于 **STM32Cube HAL 库（STM32Cube_FW_F1 V1.8.7）+ CMake** 的规范化工程模板，
 面向 **正点原子精英 STM32F103 V2（ATK-DNF103，主控 STM32F103ZET6）**。
@@ -97,8 +98,13 @@ cmake --build --preset debug --target flash
 cmake --build --preset debug --target erase
 ```
 
-如果使用 DAP 仿真器，把 `CMakeLists.txt` 中 `flash`/`erase` 目标的
-`-f interface/stlink.cfg` 换成 `-f interface/cmsis-dap.cfg` 即可。
+使用 DAP 仿真器时，通过 CMake 缓存变量切换探针（默认 `stlink`）：
+
+```bash
+cmake --preset debug -DSTM32_DEBUG_PROBE=cmsis-dap
+```
+
+或直接调用烧录脚本：`./Scripts/flash.sh cmsis-dap`。
 
 串口调试：USART1（PA9/PA10）通过跳线帽接到板载 CH340C，USB 连接电脑后
 用串口工具打开 **115200-8-N-1** 即可看到 printf 输出。
@@ -195,3 +201,5 @@ ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖
 ## 许可证
 
 本项目采用 [MIT License](LICENSE) 开源，可自由使用、修改与再分发，详见 LICENSE 文件。
+其中包含的 ST HAL/CMSIS 与 Adafruit 字体等第三方组件遵守各自的
+BSD-3-Clause 许可，完整声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
