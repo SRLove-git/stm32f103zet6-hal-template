@@ -10,15 +10,50 @@
  */
 
 #include "main.h"
+#include "attitude.h"
 #include "bsp_selftest.h"
 #include "led.h"
+#include "lcd.h"
 #include "key.h"
 #include "beep.h"
+#include "mpu6050.h"
 #include "usart.h"
 
 #include <stdio.h>
 
 static void MX_GPIO_Init(void);
+
+/**
+ * @brief Show one angle ("-123.4") at fixed width using integer math
+ *        (the bundled newlib %f is unreliable, see README).
+ */
+static void LCD_ShowAngle(uint16_t x, uint16_t y, float deg, uint8_t scale, uint16_t color,
+                          uint16_t bg)
+{
+    int32_t v10 = (int32_t)(deg * 10.0f);
+    int32_t ip = v10 / 10;
+    int32_t fp = v10 % 10;
+
+    if (fp < 0)
+    {
+        fp = -fp;
+    }
+
+    LCD_ShowChar(x, y, (ip < 0) ? '-' : ' ', scale, color, bg);
+    if (ip < 0)
+    {
+        ip = -ip;
+    }
+    x = (uint16_t)(x + 6U * scale);
+
+    LCD_ShowNum(x, y, (uint32_t)ip, 3U, scale, color, bg);
+    x = (uint16_t)(x + 18U * scale);
+
+    LCD_ShowChar(x, y, '.', scale, color, bg);
+    x = (uint16_t)(x + 6U * scale);
+
+    LCD_ShowNum(x, y, (uint32_t)fp, 1U, scale, color, bg);
+}
 
 int main(void)
 {
@@ -48,6 +83,25 @@ int main(void)
     BSP_SelfTest();
 
     uint8_t key;
+    uint8_t mpu_ok;
+    uint8_t use_madgwick = 0U;
+    float euler[3];
+
+    mpu_ok = (MPU6050_Init() == 0U);
+
+    if (mpu_ok != 0U)
+    {
+        LCD_Init();
+        ATT_SetFilter(ATT_FILTER_MAHONY);
+        ATT_Init();
+
+        LCD_Clear(LCD_WHITE);
+        LCD_ShowString(10U, 10U, 2U, "Attitude (Mahony)", LCD_BLACK, LCD_WHITE);
+        LCD_ShowString(10U, 40U, 2U, "KEY_UP: switch filter", LCD_BLUE, LCD_WHITE);
+        LCD_ShowString(10U, 60U, 2U, "Roll :", LCD_BLACK, LCD_WHITE);
+        LCD_ShowString(10U, 130U, 2U, "Pitch:", LCD_BLACK, LCD_WHITE);
+        LCD_ShowString(10U, 200U, 2U, "Yaw  :", LCD_BLACK, LCD_WHITE);
+    }
 
     while (1)
     {
@@ -67,17 +121,40 @@ int main(void)
                 break;
 
             case KEY_UP_PRESS:
-                printf("KEY_UP pressed\r\n");
-                LED1_Toggle();
+                if (mpu_ok != 0U)
+                {
+                    use_madgwick ^= 1U;
+                    ATT_SetFilter(use_madgwick != 0U ? ATT_FILTER_MADGWICK : ATT_FILTER_MAHONY);
+                    ATT_Init();
+                    LCD_Fill(10U, 10U, 230U, 30U, LCD_WHITE);
+                    LCD_ShowString(10U, 10U, 2U,
+                                   use_madgwick != 0U ? "Attitude (Madgwick)" : "Attitude (Mahony)",
+                                   LCD_BLACK, LCD_WHITE);
+                }
+                else
+                {
+                    printf("KEY_UP pressed\r\n");
+                    LED1_Toggle();
+                }
                 break;
 
             default:
                 break;
         }
 
-        /* Heartbeat: LED0 (red) blinks. */
-        LED0_Toggle();
-        HAL_Delay(200);
+        if (mpu_ok != 0U)
+        {
+            MPU6050_GetAttitude(euler);
+            LCD_ShowAngle(80U, 60U, euler[0], 3U, LCD_BLACK, LCD_WHITE);
+            LCD_ShowAngle(80U, 130U, euler[1], 3U, LCD_BLACK, LCD_WHITE);
+            LCD_ShowAngle(80U, 200U, euler[2], 3U, LCD_BLACK, LCD_WHITE);
+        }
+        else
+        {
+            /* Heartbeat: LED0 (red) blinks. */
+            LED0_Toggle();
+        }
+        HAL_Delay(100);
     }
 }
 
