@@ -90,12 +90,21 @@ cmake --build build --target erase
 
 ## 如何基于模板新建项目
 
-1. 复制整个目录并重命名，例如 `cp -r stm32f103zet6-hal-template my_project`。
-2. 修改 `CMakeLists.txt` 第一行的 `project(...)` 名称为新工程名。
-3. 新写的外设驱动放在 `BSP/Inc` 与 `BSP/Src`（或 `Core/Src`），无需改 CMake，
+0. 推荐直接使用一键脚本（自动复制并改名）：
+
+   ```bash
+   ./Scripts/new_project.sh my_project
+   ```
+
+   默认在模板同级目录生成 `my_project`，也可指定路径：
+   `./Scripts/new_project.sh my_project /path/to/my_project`。
+
+1. 或手动复制整个目录并重命名，例如 `cp -r stm32f103zet6-hal-template my_project`，
+   然后修改 `CMakeLists.txt` 第一行的 `project(...)` 名称为新工程名。
+2. 新写的外设驱动放在 `BSP/Inc` 与 `BSP/Src`（或 `Core/Src`），无需改 CMake，
    源文件会自动收集；若用到新的 HAL 模块，在
    `Core/Inc/stm32f1xx_hal_conf.h` 中取消对应 `HAL_xxx_MODULE_ENABLED` 的注释。
-4. 在外设初始化中遵循本模板的约定：**外设时钟/引脚/NVIC 放在
+3. 在外设初始化中遵循本模板的约定：**外设时钟/引脚/NVIC 放在
    `stm32f1xx_hal_msp.c` 的 `HAL_xxx_MspInit` 中**（与 STM32CubeMX 生成代码一致），
    BSP 只负责业务逻辑。
 

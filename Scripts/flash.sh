@@ -6,7 +6,25 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ELF="${SCRIPT_DIR}/../build/stm32f103zet6-hal-template"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Detect the CMake project name from CMakeLists.txt.
+PROJECT_NAME="$(sed -n 's/^project(\([^ (]*\).*/\1/p' "${PROJECT_DIR}/CMakeLists.txt" | head -n 1)"
+if [[ -z "${PROJECT_NAME}" ]]; then
+    echo "Error: cannot detect project name in ${PROJECT_DIR}/CMakeLists.txt" >&2
+    exit 1
+fi
+
+# Locate the ELF (plain build/ or preset build dirs).
+ELF=""
+for cand in "${PROJECT_DIR}/build/${PROJECT_NAME}" \
+            "${PROJECT_DIR}/build/debug/${PROJECT_NAME}" \
+            "${PROJECT_DIR}/build/release/${PROJECT_NAME}"; do
+    if [[ -f "${cand}" ]]; then
+        ELF="${cand}"
+        break
+    fi
+done
 
 if [[ ! -f "${ELF}" ]]; then
     echo "Firmware not found: ${ELF}" >&2
