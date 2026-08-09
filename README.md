@@ -1,5 +1,7 @@
 # STM32F103ZET6 HAL 工程模板（正点原子精英板）
 
+[![CI](https://github.com/SRLove-git/stm32f103zet6-hal-template/actions/workflows/ci.yml/badge.svg)](https://github.com/SRLove-git/stm32f103zet6-hal-template/actions/workflows/ci.yml)
+
 基于 **STM32Cube HAL 库（STM32Cube_FW_F1 V1.8.7）+ CMake** 的规范化工程模板，
 面向 **正点原子精英 STM32F103 V2（ATK-DNF103，主控 STM32F103ZET6）**。
 以后新项目直接复制本目录，改个工程名即可，无需再手动配置构建系统。

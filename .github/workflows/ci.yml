@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: debug
+            configure: cmake --preset debug
+            build: cmake --build --preset debug
+            artifacts: build/debug
+          - name: release
+            configure: cmake --preset release
+            build: cmake --build --preset release
+            artifacts: build/release
+          - name: nano
+            configure: cmake -B build/nano -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_NEWLIB_NANO=ON
+            build: cmake --build build/nano
+            artifacts: build/nano
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ARM GNU toolchain 13.3
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 -o /tmp/arm-toolchain.tar.xz \
+            "https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz"
+          sudo mkdir -p /opt/arm-gnu
+          sudo tar -xJf /tmp/arm-toolchain.tar.xz -C /opt/arm-gnu
+          echo "/opt/arm-gnu/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin" >> "${GITHUB_PATH}"
+
+      - name: Configure
+        run: ${{ matrix.configure }}
+
+      - name: Build (zero warnings required)
+        run: |
+          set -euo pipefail
+          ${{ matrix.build }} 2>&1 | tee /tmp/build.log
+          if grep -iE 'warning:|error:' /tmp/build.log; then
+            echo "::error::Build produced warnings or errors"
+            exit 1
+          fi
+
+      - name: Check firmware artifacts
+        run: |
+          ls -la "${{ matrix.artifacts }}/stm32f103zet6-hal-template.hex"
+          ls -la "${{ matrix.artifacts }}/stm32f103zet6-hal-template.bin"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.name }}
+          path: |
+            ${{ matrix.artifacts }}/stm32f103zet6-hal-template.hex
+            ${{ matrix.artifacts }}/stm32f103zet6-hal-template.bin
+            ${{ matrix.artifacts }}/stm32f103zet6-hal-template.map
