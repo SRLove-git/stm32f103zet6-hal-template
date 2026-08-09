@@ -226,6 +226,9 @@ OLED 说明：ATK-0.96 寸 SSD1306 模块以 **8080 并口模式**（模块默�
   `-ffunction-sections -fdata-sections` + `-Wl,--gc-sections` 裁剪未用代码。
 - 系统时钟：HSE 8 MHz × PLL9 = 72 MHz，APB1 = 36 MHz，APB2 = 72 MHz，
   Flash 等待周期 2（见 `Core/Src/main.c` 的 `SystemClock_Config`）。
+- 已知工具链坑：arm-gnu-toolchain 15.2 自带 newlib 的 `%f` 打印对负数/NaN 有缺陷
+  （可能输出 `0.0`、乱码甚至 HardFault），浮点输出请用整数格式化
+  （参考 `bsp_selftest.c` 的 `PrintDeg()`）。
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

@@ -127,6 +127,12 @@ static void ATT_UpdateMahony(float gx, float gy, float gz, float ax, float ay, f
     q1 *= recip_norm;
     q2 *= recip_norm;
     q3 *= recip_norm;
+
+    /* Self-reset if the quaternion ever becomes invalid (NaN/inf) */
+    if (!(q0 == q0) || !(q1 == q1) || !(q2 == q2) || !(q3 == q3))
+    {
+        ATT_Init();
+    }
 }
 
 static void ATT_UpdateMadgwick(float gx, float gy, float gz, float ax, float ay, float az, float dt)
@@ -202,6 +208,11 @@ static void ATT_UpdateMadgwick(float gx, float gy, float gz, float ax, float ay,
     q1 *= recip_norm;
     q2 *= recip_norm;
     q3 *= recip_norm;
+
+    if (!(q0 == q0) || !(q1 == q1) || !(q2 == q2) || !(q3 == q3))
+    {
+        ATT_Init();
+    }
 }
 
 void ATT_UpdateIMU(float gx, float gy, float gz, float ax, float ay, float az, float dt)

@@ -25,6 +25,21 @@
 
 #include <stdio.h>
 
+/* Print a float as "X.Y" using integer math only: the bundled newlib's %f
+ * is broken for negative/NaN values (prints 0.0 or garbage, can even fault). */
+static void PrintDeg(const char* label, float deg)
+{
+    int32_t v10 = (int32_t)(deg * 10.0f);
+    int32_t ip = v10 / 10;
+    int32_t fp = v10 % 10;
+
+    if (fp < 0)
+    {
+        fp = -fp;
+    }
+    printf("%s=%ld.%ld", label, (long)ip, (long)fp);
+}
+
 static uint8_t selftest_failed = 0U;
 
 #define SELFTEST_CHECK(cond, name)                                                                 \
@@ -183,7 +198,13 @@ static void SelfTest_MPU6050(void)
         MPU6050_GetAttitude(euler);
         HAL_Delay(10U);
     }
-    printf("  attitude: roll=%5.1f pitch=%5.1f yaw=%5.1f deg\r\n", euler[0], euler[1], euler[2]);
+    printf("  attitude: ");
+    PrintDeg("roll", euler[0]);
+    printf(" ");
+    PrintDeg("pitch", euler[1]);
+    printf(" ");
+    PrintDeg("yaw", euler[2]);
+    printf(" deg\r\n");
     SELFTEST_CHECK((euler[0] > -45.0f) && (euler[0] < 45.0f) && (euler[1] > -45.0f) &&
                        (euler[1] < 45.0f),
                    "attitude plausible (level: roll/pitch ~ 0)");
@@ -196,7 +217,13 @@ static void SelfTest_MPU6050(void)
         MPU6050_GetAttitude(euler);
         HAL_Delay(10U);
     }
-    printf("  madgwick: roll=%5.1f pitch=%5.1f yaw=%5.1f deg\r\n", euler[0], euler[1], euler[2]);
+    printf("  madgwick: ");
+    PrintDeg("roll", euler[0]);
+    printf(" ");
+    PrintDeg("pitch", euler[1]);
+    printf(" ");
+    PrintDeg("yaw", euler[2]);
+    printf(" deg\r\n");
 }
 
 static void SelfTest_OLED(void)

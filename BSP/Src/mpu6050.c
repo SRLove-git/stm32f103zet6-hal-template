@@ -247,6 +247,7 @@ uint8_t MPU6050_Init(void)
     uint8_t order;
     uint8_t addr_idx;
     uint8_t found = 0U;
+    uint8_t retry;
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     BSP_DWT_DelayInit();
@@ -281,16 +282,27 @@ uint8_t MPU6050_Init(void)
         return 1U; /* module not present */
     }
 
-    /* Wake the module and select clock source (PLL X gyro) */
-    (void)MPU6050_WriteReg(MPU6050_REG_PWR_MGMT_1, 0x80U); /* reset */
-    HAL_Delay(100U);
-    (void)MPU6050_WriteReg(MPU6050_REG_PWR_MGMT_1, 0x01U);
-    (void)MPU6050_WriteReg(MPU6050_REG_SMPLRT_DIV, 0x07U);   /* 1 kHz / 8 = 125 Hz */
-    (void)MPU6050_WriteReg(MPU6050_REG_CONFIG, 0x06U);       /* DLPF 5 Hz */
-    (void)MPU6050_WriteReg(MPU6050_REG_GYRO_CONFIG, 0x18U);  /* +-2000 dps */
-    (void)MPU6050_WriteReg(MPU6050_REG_ACCEL_CONFIG, 0x18U); /* +-16 g */
+    /* Reset + configure, then verify by read-back; retry on transient
+     * I2C glitches (e.g. the module still settling after power-on). */
+    for (retry = 0U; retry < 3U; retry++)
+    {
+        (void)MPU6050_WriteReg(MPU6050_REG_PWR_MGMT_1, 0x80U); /* reset */
+        HAL_Delay(100U);
+        (void)MPU6050_WriteReg(MPU6050_REG_PWR_MGMT_1, 0x01U);
+        (void)MPU6050_WriteReg(MPU6050_REG_SMPLRT_DIV, 0x07U);   /* 1 kHz / 8 = 125 Hz */
+        (void)MPU6050_WriteReg(MPU6050_REG_CONFIG, 0x06U);       /* DLPF 5 Hz */
+        (void)MPU6050_WriteReg(MPU6050_REG_GYRO_CONFIG, 0x18U);  /* +-2000 dps */
+        (void)MPU6050_WriteReg(MPU6050_REG_ACCEL_CONFIG, 0x18U); /* +-16 g */
 
-    return 0U;
+        if ((MPU6050_ReadReg(MPU6050_REG_GYRO_CONFIG) == 0x18U) &&
+            (MPU6050_ReadReg(MPU6050_REG_ACCEL_CONFIG) == 0x18U) &&
+            (MPU6050_ReadReg(MPU6050_REG_PWR_MGMT_1) == 0x01U))
+        {
+            return 0U;
+        }
+    }
+
+    return 1U; /* configuration could not be verified */
 }
 
 void MPU6050_ReadRaw(int16_t accel[3], int16_t gyro[3], int16_t* temp)
