@@ -19,6 +19,7 @@
   NEC 红外接收、RS485、CAN、SDIO TF 卡、TFTLCD（FSMC，ILI9341 系列）
 - **CMake 构建**：`cmake/toolchain-arm-none-eabi.cmake` + 顶层 `CMakeLists.txt`
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
+- **FreeRTOS（可选）**：`-DUSE_FREERTOS=ON` 编译任务版演示，内核见 `Middlewares/FreeRTOS/`
 
 ## 目录结构
 
@@ -233,6 +234,25 @@ OLED 说明：ATK-0.96 寸 SSD1306 模块以 **8080 并口模式**（模块默�
 - 已知工具链坑：arm-gnu-toolchain 15.2 自带 newlib 的 `%f` 打印对负数/NaN 有缺陷
   （可能输出 `0.0`、乱码甚至 HardFault），浮点输出请用整数格式化
   （参考 `bsp_selftest.c` 的 `PrintDeg()`）。
+
+## FreeRTOS（可选）
+
+模板同时支持裸机和 FreeRTOS 两种构建，其余代码（BSP、自检、CMake、CI）完全一致：
+
+```bash
+cmake --preset freertos && cmake --build --preset freertos
+```
+
+或手动加 `-DUSE_FREERTOS=ON`。任务版演示（`Core/Src/freertos.c`）：
+
+- `attitude` 任务：每 100 ms 刷新 LCD 姿态角（Mahony/Madgwick，KEY_UP 切换）
+- `keys` 任务：每 20 ms 扫描按键（蜂鸣器 / LED / 滤波器切换）
+
+说明：
+
+- FreeRTOS 内核来自 STM32Cube_FW_F1（V10.x，MIT 许可），堆为 heap_4（10 KB）
+- SysTick 由 HAL tick 与 FreeRTOS tick 共享（1 kHz），见 `stm32f1xx_it.c`
+- 任务间 printf 未加互斥，仅用于演示；多任务打印请自行加锁
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

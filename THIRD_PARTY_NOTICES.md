@@ -22,6 +22,13 @@ for module configuration.
 - Copyright: Adafruit Industries
 - Location: `BSP/Src/lcdfont.c`, `BSP/Inc/lcdfont.h`
 
+## FreeRTOS Kernel
+
+- Source: STM32Cube_FW_F1 V1.8.7, Middlewares/Third_Party/FreeRTOS
+- License: MIT (see `Middlewares/FreeRTOS/LICENSE.txt`)
+- Copyright: Amazon.com, Inc. or its affiliates / Real Time Engineers Ltd.
+- Location: `Middlewares/FreeRTOS/`
+
 ## Original template code
 
 - License: MIT (see `LICENSE`)

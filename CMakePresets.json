@@ -27,6 +27,18 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "freertos",
+      "displayName": "FreeRTOS",
+      "description": "Debug build with FreeRTOS task-based demo",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/freertos",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-arm-none-eabi.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "USE_FREERTOS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -37,6 +49,10 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "freertos",
+      "configurePreset": "freertos"
     }
   ]
 }

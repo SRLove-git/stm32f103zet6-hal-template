@@ -39,6 +39,10 @@ jobs:
             configure: cmake -B build/nano -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_NEWLIB_NANO=ON
             build: cmake --build build/nano
             artifacts: build/nano
+          - name: freertos
+            configure: cmake -B build/freertos -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_FREERTOS=ON
+            build: cmake --build build/freertos
+            artifacts: build/freertos
 
     steps:
       - name: Checkout

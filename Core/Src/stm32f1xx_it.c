@@ -10,6 +10,12 @@
 #include "sd_card.h"
 #include "usart.h"
 
+#ifdef USE_FREERTOS
+#include "FreeRTOS.h"
+#include "task.h"
+extern void xPortSysTickHandler(void);
+#endif
+
 /**
  * @brief This function handles Non maskable interrupt.
  */
@@ -63,7 +69,9 @@ void UsageFault_Handler(void)
 /**
  * @brief This function handles System service call via SWI instruction.
  */
+#ifndef USE_FREERTOS
 void SVC_Handler(void) {}
+#endif
 
 /**
  * @brief This function handles Debug Monitor.
@@ -73,7 +81,9 @@ void DebugMon_Handler(void) {}
 /**
  * @brief This function handles Pendable request for system service.
  */
+#ifndef USE_FREERTOS
 void PendSV_Handler(void) {}
+#endif
 
 /**
  * @brief This function handles System tick timer.
@@ -81,6 +91,14 @@ void PendSV_Handler(void) {}
 void SysTick_Handler(void)
 {
     HAL_IncTick();
+#ifdef USE_FREERTOS
+    /* SysTick is enabled by HAL_Init before the scheduler starts; only feed
+     * FreeRTOS once the kernel is actually running. */
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+    {
+        xPortSysTickHandler();
+    }
+#endif
 }
 
 /**

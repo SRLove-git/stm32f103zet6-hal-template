@@ -20,6 +20,9 @@ endif()
 # - ON: smaller libc; float printf is kept by forcing _printf_float in.
 option(USE_NEWLIB_NANO "Use newlib-nano (smaller binary, keeps %f support)" OFF)
 
+# FreeRTOS kernel + task-based demo (Core/Src/freertos.c).
+option(USE_FREERTOS "Build with FreeRTOS and the task-based demo" OFF)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
@@ -49,6 +52,8 @@ set_source_files_properties(${HAL_SOURCES} PROPERTIES
     COMPILE_OPTIONS "-Wno-cast-align;-Wno-unused-parameter")
 
 file(GLOB CORE_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/Core/Src/*.c")
+# freertos.c depends on the FreeRTOS headers; add it only with USE_FREERTOS.
+list(FILTER CORE_SOURCES EXCLUDE REGEX "/freertos\\.c$")
 file(GLOB BSP_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/BSP/Src/*.c")
 
 add_executable(${PROJECT_NAME}
@@ -58,6 +63,30 @@ add_executable(${PROJECT_NAME}
     "${CMAKE_SOURCE_DIR}/Startup/startup_stm32f103xe.s")
 
 target_link_libraries(${PROJECT_NAME} m) # libm: sqrtf/atan2f for the attitude filter
+
+if(USE_FREERTOS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_FREERTOS)
+
+    set(FREERTOS_SOURCES
+        "${CMAKE_SOURCE_DIR}/Core/Src/freertos.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/tasks.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/queue.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/list.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/timers.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/event_groups.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/stream_buffer.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/portable/GCC/ARM_CM3/port.c"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/portable/MemMang/heap_4.c")
+
+    target_sources(${PROJECT_NAME} PRIVATE ${FREERTOS_SOURCES})
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/include"
+        "${CMAKE_SOURCE_DIR}/Middlewares/FreeRTOS/portable/GCC/ARM_CM3")
+
+    # Third-party kernel sources: silence benign warnings from the strict set
+    set_source_files_properties(${FREERTOS_SOURCES} PROPERTIES
+        COMPILE_OPTIONS "-Wno-shadow;-Wno-undef;-Wno-unused-parameter;-Wno-cast-align")
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     STM32F103xE      # device family: STM32F103ZE (512 KB flash / 64 KB RAM)
