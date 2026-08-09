@@ -15,7 +15,7 @@
 - **链接脚本**：`Linker/STM32F103ZETX_FLASH.ld`（512 KB Flash / 64 KB RAM）
 - **板级驱动 BSP**：LED、按键、蜂鸣器、USART1 printf（115200-8N1）、
   24C02 EEPROM（I2C）、W25Q128 SPI Flash、光敏 ADC、DS18B20 单总线、
-  NEC 红外接收、RS485、CAN、SDIO TF 卡
+  NEC 红外接收、RS485、CAN、SDIO TF 卡、TFTLCD（FSMC，ILI9341 系列）
 - **CMake 构建**：`cmake/toolchain-arm-none-eabi.cmake` + 顶层 `CMakeLists.txt`
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
 
@@ -37,7 +37,7 @@
 │       ├── stm32f1xx_it.c         # 中断服务函数
 │       └── system_stm32f1xx.c
 ├── BSP/                           # 板级驱动（按外设拆分）
-│   ├── Inc/  (led key beep usart eeprom w25qxx lsens onewire ir_nec rs485 can_bus sd_card bsp_dwt)
+│   ├── Inc/  (led key beep usart eeprom w25qxx lsens onewire ir_nec rs485 can_bus sd_card lcd lcdfont bsp_dwt)
 │   └── Src/  (同名 .c)
 ├── Drivers/
 │   ├── CMSIS/
@@ -148,10 +148,17 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 | RS485 | `rs485.h` | USART2 (PA2/PA3) + PD7 | `RS485_SendData()` / `RS485_ReceiveData()` |
 | CAN | `can_bus.h` | CAN1 (PA11/PA12) 500 kbit/s | `CAN1_SendMsg()` / `CAN1_ReceiveMsg()` |
 | TF 卡 | `sd_card.h` | SDIO 4-bit (PC8~12/PD2) | `SD_ReadBlocks()` / `SD_WriteBlocks()`，512 B/块 |
+| TFTLCD | `lcd.h` | FSMC NE4/A10，16 位数据线，PB0 背光 | `LCD_Init()` 后 `LCD_Clear()` / `LCD_ShowString()` 等 |
 
 使用前注意跳线帽：RS485 需短接 P5，CAN 需把 P6 拨到 CAN 档，
 NRF24L01 与 SPI Flash 共用 SPI2（片选互斥）。微秒级时序（单总线/红外）
 由 `bsp_dwt.h` 的 DWT 延时提供，无需额外外设。
+
+TFTLCD 说明：预配置为 2.8 寸 **ILI9341 系列**（`LCD_GetID()` 应返回 `0x9341`），
+命令/数据通过 FSMC Bank1 NE4 + A10 映射（`0x6C000000 | 0x7FE`），内置 5x7
+ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖屏切换
+（`LCD_SetDirection()`）。3.5/4.3/7 寸屏需在 `LCD_InitSequence()` 中补充对应
+控制器的初始化序列。
 
 ## 板载外设引脚速查（摘自硬件参考手册）
 
