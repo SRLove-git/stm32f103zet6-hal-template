@@ -17,10 +17,10 @@ cmake-build-*/
 !.vscode/launch.json
 !.vscode/settings.json
 !.vscode/tasks.json
+.settings/
 .idea/
 .DS_Store
 
 # Misc
 compile_commands.json
 *.log
-
