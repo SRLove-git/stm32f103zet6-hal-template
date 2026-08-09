@@ -1,0 +1,23 @@
+# Build output
+build/
+cmake-build-*/
+
+# Toolchain artifacts
+*.o
+*.a
+*.elf
+*.hex
+*.bin
+*.map
+*.su
+
+# IDE / editor
+.vscode/
+.idea/
+.DS_Store
+
+# Misc
+compile_commands.json
+*.log
+
+
