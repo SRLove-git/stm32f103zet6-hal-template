@@ -30,6 +30,14 @@ extern "C"
 #define MPU6050_ADDR 0x68U /* I2C address with AD0 low (default) */
 
     /**
+     * @brief Run the Mahony attitude filter on fresh sensor data.
+     * @param euler [out] roll / pitch / yaw in degrees (yaw drifts, no mag).
+     * @note  Call periodically (e.g. every 10 ms); the filter uses HAL_GetTick
+     *        internally for dt.
+     */
+    void MPU6050_GetAttitude(float euler[3]);
+
+    /**
      * @brief Initialize GPIO + software I2C and configure the sensor.
      * @retval 0 on success, 1 if the module is not detected (WHO_AM_I != 0x68).
      */

@@ -57,6 +57,8 @@ add_executable(${PROJECT_NAME}
     ${HAL_SOURCES}
     "${CMAKE_SOURCE_DIR}/Startup/startup_stm32f103xe.s")
 
+target_link_libraries(${PROJECT_NAME} m) # libm: sqrtf/atan2f for the attitude filter
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     STM32F103xE      # device family: STM32F103ZE (512 KB flash / 64 KB RAM)
     USE_HAL_DRIVER)  # enable the HAL layer

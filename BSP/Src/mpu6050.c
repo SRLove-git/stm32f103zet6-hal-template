@@ -6,6 +6,7 @@
  */
 
 #include "mpu6050.h"
+#include "attitude.h"
 #include "bsp_dwt.h"
 
 /* Registers */
@@ -332,4 +333,28 @@ float MPU6050_ReadTempC(void)
 
     MPU6050_ReadRaw(accel, gyro, &temp);
     return (float)temp / 340.0f + 36.53f;
+}
+
+void MPU6050_GetAttitude(float euler[3])
+{
+    static uint32_t last_tick = 0U;
+    uint32_t now;
+    float dt;
+    float accel_g[3];
+    float gyro_dps[3];
+
+    now = HAL_GetTick();
+    dt = (float)(now - last_tick) / 1000.0f;
+    if ((dt <= 0.0f) || (dt > 0.1f))
+    {
+        dt = 0.01f; /* first call or long gap: use a safe default */
+    }
+    last_tick = now;
+
+    MPU6050_ReadAccelG(accel_g);
+    MPU6050_ReadGyroDps(gyro_dps);
+
+    ATT_UpdateIMU(gyro_dps[0] * ATT_DEG2RAD, gyro_dps[1] * ATT_DEG2RAD, gyro_dps[2] * ATT_DEG2RAD,
+                  accel_g[0], accel_g[1], accel_g[2], dt);
+    ATT_GetEuler(&euler[0], &euler[1], &euler[2]);
 }

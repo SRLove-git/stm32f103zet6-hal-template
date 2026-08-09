@@ -9,6 +9,7 @@
  */
 
 #include "bsp_selftest.h"
+#include "attitude.h"
 #include "can_bus.h"
 #include "eeprom.h"
 #include "ir_nec.h"
@@ -155,6 +156,8 @@ static void SelfTest_MPU6050(void)
     int16_t accel[3];
     int16_t gyro[3];
     int16_t temp;
+    float euler[3];
+    uint8_t i;
 
     printf("[MPU6050] ATK module I/F (SCL=PB11, SDA=PB10)\r\n");
     if (MPU6050_Init() != 0U)
@@ -172,6 +175,18 @@ static void SelfTest_MPU6050(void)
            (int)accel[2], (int)gyro[0], (int)gyro[1], (int)gyro[2], (int)temp);
     SELFTEST_CHECK((accel[0] != 0) || (accel[1] != 0) || (accel[2] != 0),
                    "accel data non-zero (static: Z ~ +1 g)");
+
+    /* Mahony attitude: let the filter settle for ~0.5 s */
+    ATT_Init();
+    for (i = 0U; i < 50U; i++)
+    {
+        MPU6050_GetAttitude(euler);
+        HAL_Delay(10U);
+    }
+    printf("  attitude: roll=%5.1f pitch=%5.1f yaw=%5.1f deg\r\n", euler[0], euler[1], euler[2]);
+    SELFTEST_CHECK((euler[0] > -45.0f) && (euler[0] < 45.0f) && (euler[1] > -45.0f) &&
+                       (euler[1] < 45.0f),
+                   "attitude plausible (level: roll/pitch ~ 0)");
 }
 
 static void SelfTest_OLED(void)
