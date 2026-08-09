@@ -14,6 +14,7 @@
 #include "ir_nec.h"
 #include "lcd.h"
 #include "lsens.h"
+#include "mpu6050.h"
 #include "onewire.h"
 #include "rs485.h"
 #include "sd_card.h"
@@ -147,6 +148,28 @@ static void SelfTest_RS485(void)
     printf("  [INFO] init OK (P5 jumper, half-duplex; requires a peer node)\r\n");
 }
 
+static void SelfTest_MPU6050(void)
+{
+    int16_t accel[3];
+    int16_t gyro[3];
+    int16_t temp;
+
+    printf("[MPU6050] ATK module I/F (SCL=PB10, SDA=PB11)\r\n");
+    if (MPU6050_Init() != 0U)
+    {
+        printf("  [SKIP] module not detected (WHO_AM_I != 0x68)\r\n");
+        return;
+    }
+
+    SELFTEST_CHECK(MPU6050_ReadID() == 0x68U, "WHO_AM_I = 0x68");
+
+    MPU6050_ReadRaw(accel, gyro, &temp);
+    printf("  acc = %d, %d, %d | gyro = %d, %d, %d | temp = %d\r\n", (int)accel[0], (int)accel[1],
+           (int)accel[2], (int)gyro[0], (int)gyro[1], (int)gyro[2], (int)temp);
+    SELFTEST_CHECK((accel[0] != 0) || (accel[1] != 0) || (accel[2] != 0),
+                   "accel data non-zero (static: Z ~ +1 g)");
+}
+
 static void SelfTest_CAN(void)
 {
     printf("[CAN] CAN1 @ PA11/PA12 (loopback)\r\n");
@@ -211,6 +234,7 @@ void BSP_SelfTest(void)
     SelfTest_DS18B20();
     SelfTest_IR();
     SelfTest_RS485();
+    SelfTest_MPU6050();
     SelfTest_CAN();
     SelfTest_SD();
     SelfTest_LCD();
