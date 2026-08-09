@@ -166,6 +166,26 @@ ASCII 字体（来自 Adafruit GFX，BSD 许可），支持缩放显示与横竖
 （`LCD_SetDirection()`）。3.5/4.3/7 寸屏需在 `LCD_InitSequence()` 中补充对应
 控制器的初始化序列。
 
+## 开机自检（BSP Self-Test）
+
+上电后 `BSP_SelfTest()`（`Core/Src/main.c` 中调用）会依次测试板载外设，
+并把结果打印到 USART1（115200-8N1）：
+
+| 模块 | 检查内容 | 预期结果 |
+| --- | --- | --- |
+| EEPROM | 0xF0 地址写读回 | PASS（测试后自动恢复原值）|
+| SPI Flash | JEDEC ID + 末扇区写读回 | ID = 0xEF4018，PASS |
+| 光敏 | ADC 转换 | raw 0~4095 |
+| DS18B20 | 读温度 | 未接传感器显示 SKIP |
+| 红外 | 接收初始化 | INFO |
+| RS485 | 串口初始化 | INFO（需 P5 跳线 + 对端节点）|
+| CAN | 内部回环收发 | PASS |
+| TF 卡 | 初始化 + 读块 0 | 无卡显示 SKIP |
+| TFTLCD | 读控制器 ID | 0x9341（ILI9341）|
+
+自检结束后进入正常的 LED/按键/蜂鸣器演示。不需要自检时，删除
+`main()` 里的 `BSP_SelfTest()` 调用即可。
+
 ## 板载外设引脚速查（摘自硬件参考手册）
 
 | 外设 | 引脚 | 说明 |

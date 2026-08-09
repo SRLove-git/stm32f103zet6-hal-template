@@ -23,6 +23,13 @@ extern "C"
     void CAN1_Init(void);
 
     /**
+     * @brief Internal loopback self-test (no external bus needed).
+     *        Switches to CAN_MODE_LOOPBACK, sends a frame and checks the echo.
+     * @retval HAL_OK on success.
+     */
+    HAL_StatusTypeDef CAN1_SelfTest(void);
+
+    /**
      * @brief Send a standard-ID data frame (blocking polling).
      * @retval HAL_OK on success.
      */

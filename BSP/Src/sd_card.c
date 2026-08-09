@@ -11,7 +11,7 @@
 
 SD_HandleTypeDef hsd;
 
-void SD_Init(void)
+HAL_StatusTypeDef SD_Init(void)
 {
     HAL_SD_CardInfoTypeDef card_info;
 
@@ -25,15 +25,16 @@ void SD_Init(void)
 
     if (HAL_SD_Init(&hsd) != HAL_OK)
     {
-        Error_Handler();
+        return HAL_ERROR;
     }
 
     if (HAL_SD_ConfigWideBusOperation(&hsd, SDIO_BUS_WIDE_4B) != HAL_OK)
     {
-        Error_Handler();
+        return HAL_ERROR;
     }
 
     (void)HAL_SD_GetCardInfo(&hsd, &card_info);
+    return HAL_OK;
 }
 
 HAL_StatusTypeDef SD_ReadBlocks(uint32_t block_addr, uint8_t* buf, uint32_t count)

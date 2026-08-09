@@ -23,7 +23,8 @@ extern "C"
 
     extern SD_HandleTypeDef hsd;
 
-    void SD_Init(void);
+    /* Returns HAL_OK if a card is present and initialized, HAL_ERROR otherwise. */
+    HAL_StatusTypeDef SD_Init(void);
     HAL_StatusTypeDef SD_ReadBlocks(uint32_t block_addr, uint8_t* buf, uint32_t count);
     HAL_StatusTypeDef SD_WriteBlocks(uint32_t block_addr, const uint8_t* buf, uint32_t count);
     HAL_StatusTypeDef SD_GetCardInfo(HAL_SD_CardInfoTypeDef* info);

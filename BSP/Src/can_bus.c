@@ -6,6 +6,7 @@
  */
 
 #include "can_bus.h"
+#include <string.h>
 
 CAN_HandleTypeDef hcan1;
 
@@ -85,4 +86,68 @@ uint8_t CAN1_ReceiveMsg(uint32_t* std_id, uint8_t* data)
     (void)HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rx_header, data);
     *std_id = rx_header.StdId;
     return rx_header.DLC;
+}
+
+HAL_StatusTypeDef CAN1_SelfTest(void)
+{
+    CAN_TxHeaderTypeDef tx_header = {0};
+    CAN_RxHeaderTypeDef rx_header;
+    uint8_t tx_data[8] = {0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U};
+    uint8_t rx_data[8] = {0U};
+    uint32_t mailbox = 0U;
+    uint32_t start;
+    HAL_StatusTypeDef ret = HAL_OK;
+
+    /* Enter loopback mode */
+    if (HAL_CAN_Stop(&hcan1) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+    hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+    if ((HAL_CAN_Init(&hcan1) != HAL_OK) || (HAL_CAN_Start(&hcan1) != HAL_OK))
+    {
+        ret = HAL_ERROR;
+        goto restore;
+    }
+
+    tx_header.StdId = 0x123U;
+    tx_header.ExtId = 0U;
+    tx_header.IDE = CAN_ID_STD;
+    tx_header.RTR = CAN_RTR_DATA;
+    tx_header.DLC = 8U;
+    if (HAL_CAN_AddTxMessage(&hcan1, &tx_header, tx_data, &mailbox) != HAL_OK)
+    {
+        ret = HAL_ERROR;
+        goto restore;
+    }
+
+    /* Wait for the loopback echo (poll, max 100 ms) */
+    start = HAL_GetTick();
+    while ((HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) == 0U) &&
+           ((HAL_GetTick() - start) < 100U))
+    {
+    }
+
+    if (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) == 0U)
+    {
+        ret = HAL_ERROR;
+        goto restore;
+    }
+
+    (void)HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rx_header, rx_data);
+    if ((rx_header.DLC != 8U) || (memcmp(tx_data, rx_data, 8U) != 0))
+    {
+        ret = HAL_ERROR;
+    }
+
+restore:
+    /* Back to normal mode */
+    (void)HAL_CAN_Stop(&hcan1);
+    hcan1.Init.Mode = CAN_MODE_NORMAL;
+    if ((HAL_CAN_Init(&hcan1) != HAL_OK) || (HAL_CAN_Start(&hcan1) != HAL_OK))
+    {
+        ret = HAL_ERROR;
+    }
+
+    return ret;
 }

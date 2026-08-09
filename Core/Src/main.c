@@ -10,6 +10,7 @@
  */
 
 #include "main.h"
+#include "bsp_selftest.h"
 #include "led.h"
 #include "key.h"
 #include "beep.h"
@@ -42,6 +43,9 @@ int main(void)
     printf("PCLK2   : %lu Hz\r\n", (unsigned long)HAL_RCC_GetPCLK2Freq());
     printf("Press KEY0 / KEY1 / KEY_UP ...\r\n");
     printf("======================================\r\n");
+
+    /* On-board peripheral self-test (results over USART1). */
+    BSP_SelfTest();
 
     uint8_t key;
 
