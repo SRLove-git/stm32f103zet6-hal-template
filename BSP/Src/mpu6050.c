@@ -23,12 +23,21 @@
 #define MPU6050_GYRO_SCALE 0.06103515625f  /* 2000.0f / 32768 */
 
 #define MPU_SCL_PORT GPIOB
-#define MPU_SCL_PIN GPIO_PIN_11
 #define MPU_SDA_PORT GPIOB
-#define MPU_SDA_PIN GPIO_PIN_10
+
+/* Two pin orders exist on ATK-socket MPU modules (see mpu6050.h):
+ *   A: VCC GND SCL SDA ... (SCL = PB11, SDA = PB10) - default
+ *   B: official ATK module (VCC GND SDA SCL INT AD0) - SCL = PB10, SDA = PB11 */
+#define MPU_PIN_ORDER_A_SCL GPIO_PIN_11
+#define MPU_PIN_ORDER_A_SDA GPIO_PIN_10
+#define MPU_PIN_ORDER_B_SCL GPIO_PIN_10
+#define MPU_PIN_ORDER_B_SDA GPIO_PIN_11
 
 /* Detected slave address (0x68 or 0x69 depending on AD0) */
 static uint8_t mpu_addr = MPU6050_ADDR;
+
+/* Detected pin order: 0 = A (SCL=PB11), 1 = B (SCL=PB10) */
+static uint8_t mpu_pin_order = 0U;
 
 static void MPU_I2C_Delay(void)
 {
@@ -37,17 +46,20 @@ static void MPU_I2C_Delay(void)
 
 static void MPU_SCL_Write(uint8_t level)
 {
-    HAL_GPIO_WritePin(MPU_SCL_PORT, MPU_SCL_PIN, (level != 0U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    uint16_t pin = (mpu_pin_order == 0U) ? MPU_PIN_ORDER_A_SCL : MPU_PIN_ORDER_B_SCL;
+    HAL_GPIO_WritePin(MPU_SCL_PORT, pin, (level != 0U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 static void MPU_SDA_Write(uint8_t level)
 {
-    HAL_GPIO_WritePin(MPU_SDA_PORT, MPU_SDA_PIN, (level != 0U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    uint16_t pin = (mpu_pin_order == 0U) ? MPU_PIN_ORDER_A_SDA : MPU_PIN_ORDER_B_SDA;
+    HAL_GPIO_WritePin(MPU_SDA_PORT, pin, (level != 0U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 static uint8_t MPU_SDA_Read(void)
 {
-    return (HAL_GPIO_ReadPin(MPU_SDA_PORT, MPU_SDA_PIN) == GPIO_PIN_SET) ? 1U : 0U;
+    uint16_t pin = (mpu_pin_order == 0U) ? MPU_PIN_ORDER_A_SDA : MPU_PIN_ORDER_B_SDA;
+    return (HAL_GPIO_ReadPin(MPU_SDA_PORT, pin) == GPIO_PIN_SET) ? 1U : 0U;
 }
 
 static void MPU_I2C_Start(void)
@@ -232,18 +244,42 @@ static uint8_t MPU6050_IsValidID(uint8_t id)
 uint8_t MPU6050_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
+    uint8_t order;
+    uint8_t addr_idx;
+    uint8_t found = 0U;
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     BSP_DWT_DelayInit();
 
-    /* Open-drain outputs: the module provides 4.7k pull-ups */
-    GPIO_InitStruct.Pin = MPU_SCL_PIN | MPU_SDA_PIN;
+    /* Both PB10/PB11 as open-drain outputs: the module provides 4.7k pull-ups */
+    GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     MPU_SCL_Write(1U);
     MPU_SDA_Write(1U);
+
+    /* Probe both pin orders x both slave addresses to find the module */
+    for (order = 0U; (order < 2U) && (found == 0U); order++)
+    {
+        mpu_pin_order = order;
+        for (addr_idx = 0U; (addr_idx < 2U) && (found == 0U); addr_idx++)
+        {
+            mpu_addr = (addr_idx == 0U) ? 0x68U : 0x69U;
+            if (MPU6050_IsValidID(MPU6050_ReadID()) != 0U)
+            {
+                found = 1U;
+            }
+        }
+    }
+
+    if (found == 0U)
+    {
+        mpu_pin_order = 0U;
+        mpu_addr = MPU6050_ADDR;
+        return 1U; /* module not present */
+    }
 
     /* Wake the module and select clock source (PLL X gyro) */
     (void)MPU6050_WriteReg(MPU6050_REG_PWR_MGMT_1, 0x80U); /* reset */
@@ -254,20 +290,7 @@ uint8_t MPU6050_Init(void)
     (void)MPU6050_WriteReg(MPU6050_REG_GYRO_CONFIG, 0x18U);  /* +-2000 dps */
     (void)MPU6050_WriteReg(MPU6050_REG_ACCEL_CONFIG, 0x18U); /* +-16 g */
 
-    /* Probe WHO_AM_I at both possible slave addresses (AD0 dependent). */
-    if (MPU6050_IsValidID(MPU6050_ReadID()) != 0U)
-    {
-        mpu_addr = 0x68U;
-        return 0U;
-    }
-    mpu_addr = 0x69U;
-    if (MPU6050_IsValidID(MPU6050_ReadID()) != 0U)
-    {
-        return 0U;
-    }
-
-    mpu_addr = MPU6050_ADDR;
-    return 1U; /* module not present */
+    return 0U;
 }
 
 void MPU6050_ReadRaw(int16_t accel[3], int16_t gyro[3], int16_t* temp)
