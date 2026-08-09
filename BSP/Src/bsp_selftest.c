@@ -15,6 +15,7 @@
 #include "lcd.h"
 #include "lsens.h"
 #include "mpu6050.h"
+#include "nrf24l01.h"
 #include "oled.h"
 #include "onewire.h"
 #include "rs485.h"
@@ -184,6 +185,17 @@ static void SelfTest_OLED(void)
     printf("  [INFO] init done - text should be visible on the module\r\n");
 }
 
+static void SelfTest_NRF24L01(void)
+{
+    printf("[NRF24L01] WIRELESS I/F (SPI2 shared, CE=PG8, CS=PG7)\r\n");
+    if (NRF24L01_Init() != 0U)
+    {
+        printf("  [SKIP] module not detected (SPI read-back failed)\r\n");
+        return;
+    }
+    printf("  [INFO] module present - link test needs two modules/boards\r\n");
+}
+
 static void SelfTest_CAN(void)
 {
     printf("[CAN] CAN1 @ PA11/PA12 (loopback)\r\n");
@@ -250,6 +262,7 @@ void BSP_SelfTest(void)
     SelfTest_RS485();
     SelfTest_MPU6050();
     SelfTest_OLED();
+    SelfTest_NRF24L01();
     SelfTest_CAN();
     SelfTest_SD();
     SelfTest_LCD();

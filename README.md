@@ -157,6 +157,7 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 | TFTLCD | `lcd.h` | FSMC NE4/A10，16 位数据线，PB0 背光 | `LCD_Init()` 后 `LCD_Clear()` / `LCD_ShowString()` 等 |
 | MPU6050 | `mpu6050.h` | ATK 模块接口（实测 SCL=PB11 / SDA=PB10，软件 I2C）| `MPU6050_Init()` 后读 `MPU6050_ReadAccelG()` 等 |
 | OLED | `oled.h` | P4 接口，8080 并口（DC=PD3 / CS=PD6 / WR=PG14 / RST=PG15 / D0~7=PC0~7）| `OLED_Init()` 后 `OLED_ShowString()` + `OLED_Refresh()` |
+| NRF24L01 | `nrf24l01.h` | WIRELESS 接口（CE=PG8 / CS=PG7 / IRQ=PG6，SPI2 共用）| `NRF24L01_Init()` 后 `NRF24L01_TxPacket()` / `RxPacket()` |
 
 使用前注意跳线帽：RS485 需短接 P5，CAN 需把 P6 拨到 CAN 档，
 NRF24L01 与 SPI Flash 共用 SPI2（片选互斥）。微秒级时序（单总线/红外）
@@ -191,6 +192,7 @@ OLED 说明：ATK-0.96 寸 SSD1306 模块以 **8080 并口模式**（模块默�
 | TFTLCD | 读控制器 ID + 像素读回 | ID 为 0x93xx（ILI9341 系列，面板差异，仅供参考）|
 | MPU6050 | WHO_AM_I（0x68/0x69/0x70）+ 加速度读数 | 未插模块显示 SKIP |
 | OLED | 初始化和写入 | INFO（并口无回读，屏幕上可见文字即正常）|
+| NRF24L01 | SPI 寄存器读写回验 | 未插模块显示 SKIP |
 
 自检结束后进入正常的 LED/按键/蜂鸣器演示。不需要自检时，删除
 `main()` 里的 `BSP_SelfTest()` 调用即可。
