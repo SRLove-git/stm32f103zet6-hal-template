@@ -187,6 +187,16 @@ static void SelfTest_MPU6050(void)
     SELFTEST_CHECK((euler[0] > -45.0f) && (euler[0] < 45.0f) && (euler[1] > -45.0f) &&
                        (euler[1] < 45.0f),
                    "attitude plausible (level: roll/pitch ~ 0)");
+
+    /* Madgwick for comparison */
+    ATT_SetFilter(ATT_FILTER_MADGWICK);
+    ATT_Init();
+    for (i = 0U; i < 50U; i++)
+    {
+        MPU6050_GetAttitude(euler);
+        HAL_Delay(10U);
+    }
+    printf("  madgwick: roll=%5.1f pitch=%5.1f yaw=%5.1f deg\r\n", euler[0], euler[1], euler[2]);
 }
 
 static void SelfTest_OLED(void)

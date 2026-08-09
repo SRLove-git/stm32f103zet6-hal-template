@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file    attitude.h
- * @brief   Quaternion attitude filter (Mahony AHRS, IMU/6-axis variant).
+ * @brief   Quaternion attitude filters (Mahony / Madgwick, IMU 6-axis).
  *
  *          Pure math module - no hardware dependency. Feed it gyro (rad/s)
  *          and accelerometer (any units, normalized internally) samples.
@@ -21,6 +21,17 @@ extern "C"
 
 #define ATT_DEG2RAD 0.01745329252f
 #define ATT_RAD2DEG 57.295779513f
+
+    typedef enum
+    {
+        ATT_FILTER_MAHONY,  /* complementary: gyro + accel cross-product error */
+        ATT_FILTER_MADGWICK /* gradient-descent quaternion correction          */
+    } ATT_Filter_t;
+
+    /**
+     * @brief Select the active filter algorithm (default: Mahony).
+     */
+    void ATT_SetFilter(ATT_Filter_t filter);
 
     /**
      * @brief Reset the filter to identity quaternion.

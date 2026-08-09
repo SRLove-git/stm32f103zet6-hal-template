@@ -155,7 +155,7 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 | CAN | `can_bus.h` | CAN1 (PA11/PA12) 500 kbit/s | `CAN1_SendMsg()` / `CAN1_ReceiveMsg()` |
 | TF 卡 | `sd_card.h` | SDIO 4-bit (PC8~12/PD2) | `SD_ReadBlocks()` / `SD_WriteBlocks()`，512 B/块 |
 | TFTLCD | `lcd.h` | FSMC NE4/A10，16 位数据线，PB0 背光 | `LCD_Init()` 后 `LCD_Clear()` / `LCD_ShowString()` 等 |
-| MPU6050 | `mpu6050.h` + `attitude.h` | ATK 模块接口（实测 SCL=PB11 / SDA=PB10，软件 I2C）| `MPU6050_Init()` 后读原始数据，或 `MPU6050_GetAttitude()` 输出 Mahony 姿态角 |
+| MPU6050 | `mpu6050.h` + `attitude.h` | ATK 模块接口（实测 SCL=PB11 / SDA=PB10，软件 I2C）| `MPU6050_Init()` 后读原始数据，或 `MPU6050_GetAttitude()` 输出姿态角（Mahony/Madgwick 可选）|
 | OLED | `oled.h` | P4 接口，8080 并口（DC=PD3 / CS=PD6 / WR=PG14 / RST=PG15 / D0~7=PC0~7）| `OLED_Init()` 后 `OLED_ShowString()` + `OLED_Refresh()` |
 | NRF24L01 | `nrf24l01.h` | WIRELESS 接口（CE=PG8 / CS=PG7 / IRQ=PG6，SPI2 共用）| `NRF24L01_Init()` 后 `NRF24L01_TxPacket()` / `RxPacket()` |
 
