@@ -284,9 +284,13 @@ att          显示姿态角（Mahony/Madgwick）
 mpu          显示 MPU6050 原始数据
 adc          显示光敏传感器 ADC
 echo         回显参数
+stack        显示各任务栈剩余（仅 FreeRTOS 版）
 ```
 
 新增命令：实现 `CLI_CmdFn` 回调并用 `CLI_Register()` 注册即可（参考 `demo.c`）。
+
+FreeRTOS 版中 printf 输出由**懒创建互斥锁**串行化，多任务同时打印不会交错；
+任务栈大小按 `stack` 命令的实测水位调优（attitude 256 / keys 128 words）。
 
 ## 参数存储
 
