@@ -22,6 +22,7 @@
 - **FreeRTOS（可选）**：`-DUSE_FREERTOS=ON` 编译任务版演示，内核见 `Middlewares/FreeRTOS/`
 - **算法工具库**：`filter.h`（滑动平均/低通/中值/1D 卡尔曼）、`pid.h`（PID）、`ringbuf.h`（环形缓冲）、`crc.h`（CRC8/16/32）
 - **CLI 命令行**：串口输入命令调试（`help` 查看全部命令）
+- **参数存储**：24C02 EEPROM 持久化设置（`settings` 命令）
 
 ## 目录结构
 
@@ -149,7 +150,7 @@ Build (Debug)、Clean + Build (Debug)、Flash (OpenOCD/ST-Link)。
 
 | 模块 | 头文件 | 板载资源 | 用法示例 |
 | --- | --- | --- | --- |
-| EEPROM | `eeprom.h` | 24C02 @ I2C1 (PB6/PB7) | `EEPROM_WriteByte(0, v)` / `EEPROM_ReadByte(0)` |
+| EEPROM | `eeprom.h` | 24C02 @ 软件 I2C (PB6/PB7) | `EEPROM_WriteByte(0, v)` / `EEPROM_ReadByte(0)` |
 | SPI Flash | `w25qxx.h` | W25Q128 @ SPI2 (PB12~15) | `W25QXX_ReadID()`；写前先 `W25QXX_EraseSector()` |
 | 光敏 | `lsens.h` | ADC3_IN6 (PF8) | `LSENS_ReadADC()` 返回 0~4095 |
 | 温度 | `onewire.h` | DS18B20 @ PG11 | `DS18B20_GetTemp()` 返回 0.01°C |
@@ -286,6 +287,23 @@ echo         回显参数
 ```
 
 新增命令：实现 `CLI_CmdFn` 回调并用 `CLI_Register()` 注册即可（参考 `demo.c`）。
+
+## 参数存储
+
+版本化的设置结构体存放在 24C02 EEPROM 起始地址（含 CRC-8 校验），
+读取失败自动回退默认值。示例字段：`motor_pwm_max`、`filter_alpha_x10`、`flags`。
+
+```
+settings             显示当前设置
+settings reset       恢复默认值并保存
+settings set pwm_max 200   修改并保存（字段名：pwm_max / alpha / flags）
+```
+
+扩展：在 `BSP/Inc/settings.h` 的结构体中追加字段，并同步更新 `SETTINGS_Defaults()`。
+
+> 24C02 采用**软件 I2C**（位操作）驱动：STM32F1 硬件 I2C 在 RTOS 任务上下文
+> 下状态机不可靠（实测寄存器被破坏导致读写失败），软件 I2C 与 MPU6050 驱动
+> 一致，稳定且可移植。
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

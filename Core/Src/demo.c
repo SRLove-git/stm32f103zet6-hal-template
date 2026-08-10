@@ -9,13 +9,16 @@
 #include "attitude.h"
 #include "beep.h"
 #include "cli.h"
+#include "eeprom.h"
 #include "key.h"
 #include "lcd.h"
 #include "led.h"
 #include "lsens.h"
 #include "mpu6050.h"
+#include "settings.h"
 #include "usart.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -172,6 +175,90 @@ static void Cmd_Echo(int argc, char* argv[])
     printf("\r\n");
 }
 
+static void Cmd_Settings(int argc, char* argv[])
+{
+    uint32_t val;
+    uint8_t raw[16];
+    uint8_t i;
+
+    if (argc == 1)
+    {
+        printf("settings: pwm_max=%u alpha_x10=%u flags=0x%02X\r\n",
+               (unsigned)g_settings.motor_pwm_max, (unsigned)g_settings.filter_alpha_x10,
+               (unsigned)g_settings.flags);
+        return;
+    }
+
+    if ((strcmp(argv[1], "dump") == 0) && (argc == 2))
+    {
+        if (EEPROM_ReadBuffer(SETTINGS_EEPROM_ADDR, raw, sizeof(raw)) != HAL_OK)
+        {
+            printf("eeprom read failed\r\n");
+            return;
+        }
+        for (i = 0U; i < 16U; i++)
+        {
+            printf("%02X%s", raw[i], (i == 15U) ? "\r\n" : " ");
+        }
+        return;
+    }
+
+    if ((strcmp(argv[1], "reset") == 0) && (argc == 2))
+    {
+        SETTINGS_Reset();
+        printf("settings reset to defaults\r\n");
+        return;
+    }
+
+    if ((argc < 4) || (strcmp(argv[1], "set") != 0))
+    {
+        printf("usage: settings | settings reset | settings set <field> <value>\r\n");
+        return;
+    }
+
+    val = strtoul(argv[3], NULL, 0);
+    if (strcmp(argv[2], "pwm_max") == 0)
+    {
+        g_settings.motor_pwm_max = (uint16_t)val;
+    }
+    else if (strcmp(argv[2], "alpha") == 0)
+    {
+        g_settings.filter_alpha_x10 = (uint8_t)val;
+    }
+    else if (strcmp(argv[2], "flags") == 0)
+    {
+        g_settings.flags = (uint8_t)val;
+    }
+    else
+    {
+        printf("unknown field: %s\r\n", argv[2]);
+        return;
+    }
+
+    printf("saved: %s=%lu (%s)\r\n", argv[2], (unsigned long)val,
+           (SETTINGS_Save() == HAL_OK) ? "i2c ok" : "i2c ERR");
+}
+
+static void Cmd_EepromTest(int argc, char* argv[])
+{
+    uint8_t wbuf[2] = {0x5AU, 0xA5U};
+    uint8_t rbuf[2] = {0U, 0U};
+    uint8_t orig;
+    HAL_StatusTypeDef wr;
+    HAL_StatusTypeDef rd;
+
+    (void)argc;
+    (void)argv;
+
+    EEPROM_Init();
+    orig = EEPROM_ReadByte(0xF0U);
+    wr = EEPROM_WriteBuffer(0xF0U, wbuf, 2U);
+    rd = EEPROM_ReadBuffer(0xF0U, rbuf, 2U);
+    printf("eeprom test: %s (orig 0x%02X, wr=%d rd=%d)\r\n",
+           ((rbuf[0] == 0x5AU) && (rbuf[1] == 0xA5U)) ? "PASS" : "FAIL", orig, (int)wr, (int)rd);
+    (void)EEPROM_WriteByte(0xF0U, orig);
+}
+
 /**
  * @brief Show one angle ("-123.4") at fixed width using integer math
  *        (the bundled newlib %f is unreliable, see README).
@@ -213,6 +300,10 @@ uint8_t Demo_Init(void)
     static const CLI_Cmd_t mpu_cmd = {"mpu", "show raw MPU6050 data", Cmd_Mpu};
     static const CLI_Cmd_t adc_cmd = {"adc", "show light sensor ADC", Cmd_Adc};
     static const CLI_Cmd_t echo_cmd = {"echo", "echo arguments back", Cmd_Echo};
+    static const CLI_Cmd_t settings_cmd = {"settings", "show/set persistent settings",
+                                           Cmd_Settings};
+    static const CLI_Cmd_t eeprom_cmd = {"eeprom", "run 24C02 write/read-back test",
+                                         Cmd_EepromTest};
 
     (void)CLI_Register(&led0_cmd);
     (void)CLI_Register(&led1_cmd);
@@ -221,6 +312,10 @@ uint8_t Demo_Init(void)
     (void)CLI_Register(&mpu_cmd);
     (void)CLI_Register(&adc_cmd);
     (void)CLI_Register(&echo_cmd);
+    (void)CLI_Register(&settings_cmd);
+    (void)CLI_Register(&eeprom_cmd);
+
+    SETTINGS_Load();
 
     demo_active = (MPU6050_Init() == 0U);
     use_madgwick = 0U;
