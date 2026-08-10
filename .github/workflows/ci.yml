@@ -6,6 +6,18 @@ on:
   pull_request:
 
 jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run host unit tests
+        run: |
+          cmake -S tests -B tests/build -G Ninja
+          cmake --build tests/build
+          ctest --test-dir tests/build --output-on-failure
+
   format:
     runs-on: ubuntu-latest
     steps:
