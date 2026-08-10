@@ -259,6 +259,17 @@ static void Cmd_EepromTest(int argc, char* argv[])
     (void)EEPROM_WriteByte(0xF0U, orig);
 }
 
+static void Cmd_Fault(int argc, char* argv[])
+{
+    volatile uint32_t* bad = (volatile uint32_t*)0x20010000U; /* one past RAM */
+
+    (void)argc;
+    (void)argv;
+
+    printf("deliberately triggering a bus fault...\r\n");
+    *bad = 0xDEADBEEFU; /* precise bus fault */
+}
+
 /**
  * @brief Show one angle ("-123.4") at fixed width using integer math
  *        (the bundled newlib %f is unreliable, see README).
@@ -304,6 +315,7 @@ uint8_t Demo_Init(void)
                                            Cmd_Settings};
     static const CLI_Cmd_t eeprom_cmd = {"eeprom", "run 24C02 write/read-back test",
                                          Cmd_EepromTest};
+    static const CLI_Cmd_t fault_cmd = {"fault", "trigger a HardFault (debug)", Cmd_Fault};
 
     (void)CLI_Register(&led0_cmd);
     (void)CLI_Register(&led1_cmd);
@@ -314,6 +326,7 @@ uint8_t Demo_Init(void)
     (void)CLI_Register(&echo_cmd);
     (void)CLI_Register(&settings_cmd);
     (void)CLI_Register(&eeprom_cmd);
+    (void)CLI_Register(&fault_cmd);
 
     SETTINGS_Load();
 

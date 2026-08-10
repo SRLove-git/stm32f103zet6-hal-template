@@ -6,6 +6,7 @@
  */
 
 #include "main.h"
+#include "fault.h"
 #include "stm32f1xx_it.h"
 #include "sd_card.h"
 #include "usart.h"
@@ -29,11 +30,15 @@ void NMI_Handler(void)
 /**
  * @brief This function handles Hard fault interrupt.
  */
-void HardFault_Handler(void)
+/* Naked trampoline: hand the stacked exception frame to FAULT_Handler().
+ * The EXC_RETURN value in LR selects MSP (handler mode) or PSP (thread). */
+__attribute__((naked)) void HardFault_Handler(void)
 {
-    while (1)
-    {
-    }
+    __asm volatile("tst lr, #4\n"
+                   "ite eq\n"
+                   "mrseq r0, msp\n"
+                   "mrsne r0, psp\n"
+                   "b FAULT_Handler\n");
 }
 
 /**
