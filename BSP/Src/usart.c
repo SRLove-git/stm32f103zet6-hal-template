@@ -10,12 +10,20 @@
 
 #include <stdio.h>
 
+#ifdef USE_FREERTOS
+#include "FreeRTOS.h"
+#include "semphr.h"
+#endif
+
 UART_HandleTypeDef huart1;
 
 static uint8_t usart1_ready = 0U;
 static uint8_t usart1_rx_buf[64];
 static RingBuf_t usart1_rx;
 static uint8_t usart1_rx_byte;
+#ifdef USE_FREERTOS
+static SemaphoreHandle_t usart1_tx_mutex;
+#endif
 
 void MX_USART1_UART_Init(void)
 {
@@ -38,6 +46,13 @@ void MX_USART1_UART_Init(void)
     (void)HAL_UART_Receive_IT(&huart1, &usart1_rx_byte, 1U);
 
     usart1_ready = 1U;
+}
+
+void USART1_TxMutexInit(void)
+{
+#ifdef USE_FREERTOS
+    usart1_tx_mutex = xSemaphoreCreateMutex();
+#endif
 }
 
 /**
@@ -81,10 +96,41 @@ int _write(int fd, char* ptr, int len)
         return len;
     }
 
+#ifdef USE_FREERTOS
+    /* Blocking TX inside a mutex: safe from multiple tasks. The mutex is
+     * created lazily on the first task-context call - creating it before
+     * vTaskStartScheduler() corrupts the interrupt mask (BASEPRI stuck) on
+     * this FreeRTOS version. Do not call printf() from ISR context. */
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
+    {
+        if (usart1_tx_mutex == NULL)
+        {
+            usart1_tx_mutex = xSemaphoreCreateMutex();
+        }
+        if (usart1_tx_mutex != NULL)
+        {
+            (void)xSemaphoreTake(usart1_tx_mutex, portMAX_DELAY);
+        }
+    }
+#endif
+
     if (HAL_UART_Transmit(&huart1, (uint8_t*)ptr, (uint16_t)len, HAL_MAX_DELAY) != HAL_OK)
     {
+#ifdef USE_FREERTOS
+        if ((usart1_tx_mutex != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING))
+        {
+            (void)xSemaphoreGive(usart1_tx_mutex);
+        }
+#endif
         Error_Handler();
     }
+
+#ifdef USE_FREERTOS
+    if ((usart1_tx_mutex != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING))
+    {
+        (void)xSemaphoreGive(usart1_tx_mutex);
+    }
+#endif
 
     return len;
 }

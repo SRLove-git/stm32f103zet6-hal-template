@@ -29,6 +29,7 @@ extern "C"
     uint8_t USART1_RxGet(uint8_t* byte); /* 1 ok, 0 empty */
     uint16_t USART1_RxRead(uint8_t* buf, uint16_t len);
 
+
 #ifdef __cplusplus
 }
 #endif
