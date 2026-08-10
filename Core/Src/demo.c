@@ -8,6 +8,7 @@
 #include "demo.h"
 #include "attitude.h"
 #include "beep.h"
+#include "bsp_selftest.h"
 #include "cli.h"
 #include "eeprom.h"
 #include "key.h"
@@ -330,12 +331,21 @@ uint8_t Demo_Init(void)
 
     SETTINGS_Load();
 
-    demo_active = (MPU6050_Init() == 0U);
+    /* The boot self-test already initialized the MPU/LCD; reuse its results
+     * to avoid a redundant ~0.5 s re-initialization. */
+    if (BSP_SelfTestRan() != 0U)
+    {
+        demo_active = BSP_MPUPresent();
+    }
+    else
+    {
+        demo_active = (MPU6050_Init() == 0U);
+        LCD_Init();
+    }
     use_madgwick = 0U;
 
     if (demo_active != 0U)
     {
-        LCD_Init();
         ATT_SetFilter(ATT_FILTER_MAHONY);
         ATT_Init();
 

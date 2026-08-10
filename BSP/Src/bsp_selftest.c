@@ -41,6 +41,8 @@ static void PrintDeg(const char* label, float deg)
 }
 
 static uint8_t selftest_failed = 0U;
+static uint8_t selftest_ran = 0U;
+static uint8_t mpu_present = 0U;
 
 #define SELFTEST_CHECK(cond, name)                                                                 \
     do                                                                                             \
@@ -177,9 +179,11 @@ static void SelfTest_MPU6050(void)
     printf("[MPU6050] ATK module I/F (SCL=PB11, SDA=PB10)\r\n");
     if (MPU6050_Init() != 0U)
     {
+        mpu_present = 0U;
         printf("  [SKIP] module not detected\r\n");
         return;
     }
+    mpu_present = 1U;
 
     SELFTEST_CHECK((MPU6050_ReadID() == 0x68U) || (MPU6050_ReadID() == 0x69U) ||
                        (MPU6050_ReadID() == 0x70U),
@@ -322,4 +326,16 @@ void BSP_SelfTest(void)
 
     printf("========== Result: %s ==========\r\n",
            (selftest_failed == 0U) ? "ALL PASS" : "HAS FAILURES");
+
+    selftest_ran = 1U;
+}
+
+uint8_t BSP_SelfTestRan(void)
+{
+    return selftest_ran;
+}
+
+uint8_t BSP_MPUPresent(void)
+{
+    return mpu_present;
 }
