@@ -305,6 +305,7 @@ static void SelfTest_LCD(void)
 void BSP_SelfTest(void)
 {
     printf("\r\n========== BSP Self-Test ==========\r\n");
+    printf("[USART1] RX ring buffer armed - bytes are echoed back\r\n");
 
     SelfTest_EEPROM();
     SelfTest_SPIFlash();

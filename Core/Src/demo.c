@@ -12,6 +12,7 @@
 #include "lcd.h"
 #include "led.h"
 #include "mpu6050.h"
+#include "usart.h"
 
 #include <stdio.h>
 
@@ -127,4 +128,15 @@ void Demo_AttitudeUpdate(void)
     LCD_ShowAngle(80U, 60U, euler[0], 3U, LCD_BLACK, LCD_WHITE);
     LCD_ShowAngle(80U, 130U, euler[1], 3U, LCD_BLACK, LCD_WHITE);
     LCD_ShowAngle(80U, 200U, euler[2], 3U, LCD_BLACK, LCD_WHITE);
+}
+
+void Demo_UartEcho(void)
+{
+    uint8_t buf[16];
+    uint16_t n = USART1_RxRead(buf, sizeof(buf));
+
+    if (n > 0U)
+    {
+        (void)HAL_UART_Transmit(&huart1, buf, n, 100U);
+    }
 }

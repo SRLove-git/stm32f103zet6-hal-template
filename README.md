@@ -20,7 +20,7 @@
 - **CMake 构建**：`cmake/toolchain-arm-none-eabi.cmake` + 顶层 `CMakeLists.txt`
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
 - **FreeRTOS（可选）**：`-DUSE_FREERTOS=ON` 编译任务版演示，内核见 `Middlewares/FreeRTOS/`
-- **算法工具库**：`BSP/Inc/filter.h`（滑动平均/低通/中值/1D 卡尔曼）、`pid.h`（PID）
+- **算法工具库**：`filter.h`（滑动平均/低通/中值/1D 卡尔曼）、`pid.h`（PID）、`ringbuf.h`（环形缓冲）
 
 ## 目录结构
 
@@ -263,6 +263,10 @@ cmake --preset freertos && cmake --build --preset freertos
 | --- | --- | --- |
 | `filter.h` | 滑动平均（8 点）、一阶低通、5 点中值、1D 卡尔曼 | 各算法用独立结构体实例，`Init` 后循环 `Update` |
 | `pid.h` | 位置式 PID，带积分限幅/输出限幅、微分作用于测量值 | `PID_Init` + 循环 `PID_Update` |
+| `ringbuf.h` | 无锁单生产者/单消费者环形缓冲（容量须为 2 的幂）| 中断写入、任务读取，`Put`/`Get`/`PutBlock`/`GetBlock` |
+
+USART1 已启用**中断接收**：收到的字节进入 64 字节环形缓冲，演示程序会原样回显
+（`USART1_RxCount` / `USART1_RxRead` 读取）。
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

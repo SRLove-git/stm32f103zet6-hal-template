@@ -34,6 +34,11 @@ extern "C"
      */
     void Demo_AttitudeUpdate(void);
 
+    /**
+     * @brief Echo any pending UART RX bytes back over USART1.
+     */
+    void Demo_UartEcho(void);
+
 #ifdef __cplusplus
 }
 #endif

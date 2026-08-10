@@ -61,6 +61,7 @@ int main(void)
     while (1)
     {
         Demo_KeyScan();
+        Demo_UartEcho();
         Demo_AttitudeUpdate();
         HAL_Delay(100);
     }
