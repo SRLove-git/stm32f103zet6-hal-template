@@ -20,7 +20,7 @@
 - **CMake 构建**：`cmake/toolchain-arm-none-eabi.cmake` + 顶层 `CMakeLists.txt`
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
 - **FreeRTOS（可选）**：`-DUSE_FREERTOS=ON` 编译任务版演示，内核见 `Middlewares/FreeRTOS/`
-- **算法工具库**：`BSP/Inc/filter.h`（滑动平均/低通/中值/1D 卡尔曼）
+- **算法工具库**：`BSP/Inc/filter.h`（滑动平均/低通/中值/1D 卡尔曼）、`pid.h`（PID）
 
 ## 目录结构
 
@@ -262,6 +262,7 @@ cmake --preset freertos && cmake --build --preset freertos
 | 模块 | 内容 | 用法 |
 | --- | --- | --- |
 | `filter.h` | 滑动平均（8 点）、一阶低通、5 点中值、1D 卡尔曼 | 各算法用独立结构体实例，`Init` 后循环 `Update` |
+| `pid.h` | 位置式 PID，带积分限幅/输出限幅、微分作用于测量值 | `PID_Init` + 循环 `PID_Update` |
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
