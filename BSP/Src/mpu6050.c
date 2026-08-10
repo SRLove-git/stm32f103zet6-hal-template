@@ -7,7 +7,7 @@
 
 #include "mpu6050.h"
 #include "attitude.h"
-#include "bsp_dwt.h"
+#include "sw_i2c.h"
 
 /* Registers */
 #define MPU6050_REG_SMPLRT_DIV 0x19U
@@ -21,9 +21,6 @@
 /* Scale factors for the configured ranges (+-16 g, +-2000 dps) */
 #define MPU6050_ACCEL_SCALE 0.00048828125f /* 16.0f / 32768 */
 #define MPU6050_GYRO_SCALE 0.06103515625f  /* 2000.0f / 32768 */
-
-#define MPU_SCL_PORT GPIOB
-#define MPU_SDA_PORT GPIOB
 
 /* Two pin orders exist on ATK-socket MPU modules (see mpu6050.h):
  *   A: VCC GND SCL SDA ... (SCL = PB11, SDA = PB10) - default
@@ -39,113 +36,25 @@ static uint8_t mpu_addr = MPU6050_ADDR;
 /* Detected pin order: 0 = A (SCL=PB11), 1 = B (SCL=PB10) */
 static uint8_t mpu_pin_order = 0U;
 
-static void MPU_I2C_Delay(void)
-{
-    BSP_DWT_DelayUs(5U); /* ~100 kHz */
-}
+static SW_I2C_t mpu_i2c;
 
-static void MPU_SCL_Write(uint8_t level)
+/* Apply the detected pin order (A: SCL=PB11/SDA=PB10, B: swapped). */
+static void MPU_ApplyPinOrder(void)
 {
-    uint16_t pin = (mpu_pin_order == 0U) ? MPU_PIN_ORDER_A_SCL : MPU_PIN_ORDER_B_SCL;
-    HAL_GPIO_WritePin(MPU_SCL_PORT, pin, (level != 0U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-static void MPU_SDA_Write(uint8_t level)
-{
-    uint16_t pin = (mpu_pin_order == 0U) ? MPU_PIN_ORDER_A_SDA : MPU_PIN_ORDER_B_SDA;
-    HAL_GPIO_WritePin(MPU_SDA_PORT, pin, (level != 0U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-static uint8_t MPU_SDA_Read(void)
-{
-    uint16_t pin = (mpu_pin_order == 0U) ? MPU_PIN_ORDER_A_SDA : MPU_PIN_ORDER_B_SDA;
-    return (HAL_GPIO_ReadPin(MPU_SDA_PORT, pin) == GPIO_PIN_SET) ? 1U : 0U;
-}
-
-static void MPU_I2C_Start(void)
-{
-    MPU_SDA_Write(1U);
-    MPU_SCL_Write(1U);
-    MPU_I2C_Delay();
-    MPU_SDA_Write(0U);
-    MPU_I2C_Delay();
-    MPU_SCL_Write(0U);
-    MPU_I2C_Delay();
-}
-
-static void MPU_I2C_Stop(void)
-{
-    MPU_SDA_Write(0U);
-    MPU_SCL_Write(1U);
-    MPU_I2C_Delay();
-    MPU_SDA_Write(1U);
-    MPU_I2C_Delay();
-}
-
-static void MPU_I2C_SendByte(uint8_t byte)
-{
-    uint8_t i;
-
-    for (i = 0U; i < 8U; i++)
+    if (mpu_pin_order == 0U)
     {
-        MPU_SCL_Write(0U);
-        MPU_I2C_Delay();
-        MPU_SDA_Write((byte & 0x80U) != 0U);
-        MPU_I2C_Delay();
-        MPU_SCL_Write(1U);
-        MPU_I2C_Delay();
-        byte <<= 1U;
+        mpu_i2c.scl_port = GPIOB;
+        mpu_i2c.scl_pin = MPU_PIN_ORDER_A_SCL;
+        mpu_i2c.sda_port = GPIOB;
+        mpu_i2c.sda_pin = MPU_PIN_ORDER_A_SDA;
     }
-    MPU_SCL_Write(0U);
-    MPU_I2C_Delay();
-}
-
-static uint8_t MPU_I2C_RecvByte(void)
-{
-    uint8_t i;
-    uint8_t byte = 0U;
-
-    MPU_SDA_Write(1U); /* release the bus */
-    for (i = 0U; i < 8U; i++)
+    else
     {
-        byte <<= 1U;
-        MPU_SCL_Write(0U);
-        MPU_I2C_Delay();
-        MPU_SCL_Write(1U);
-        MPU_I2C_Delay();
-        if (MPU_SDA_Read() != 0U)
-        {
-            byte |= 0x01U;
-        }
+        mpu_i2c.scl_port = GPIOB;
+        mpu_i2c.scl_pin = MPU_PIN_ORDER_B_SCL;
+        mpu_i2c.sda_port = GPIOB;
+        mpu_i2c.sda_pin = MPU_PIN_ORDER_B_SDA;
     }
-    MPU_SCL_Write(0U);
-    MPU_I2C_Delay();
-    return byte;
-}
-
-static uint8_t MPU_I2C_WaitAck(void)
-{
-    uint8_t ack;
-
-    MPU_SDA_Write(1U); /* release the bus */
-    MPU_I2C_Delay();
-    MPU_SCL_Write(1U);
-    MPU_I2C_Delay();
-    ack = (MPU_SDA_Read() == 0U) ? 1U : 0U; /* slave pulls low = ACK */
-    MPU_SCL_Write(0U);
-    MPU_I2C_Delay();
-    return ack;
-}
-
-static void MPU_I2C_Ack(uint8_t ack)
-{
-    MPU_SDA_Write(ack); /* 1 = NACK (release SDA), 0 = ACK (pull low) */
-    MPU_I2C_Delay();
-    MPU_SCL_Write(1U);
-    MPU_I2C_Delay();
-    MPU_SCL_Write(0U);
-    MPU_I2C_Delay();
-    MPU_SDA_Write(1U);
 }
 
 /**
@@ -155,20 +64,17 @@ static uint8_t MPU6050_WriteReg(uint8_t reg, uint8_t value)
 {
     uint8_t ok;
 
-    MPU_I2C_Start();
-    MPU_I2C_SendByte((uint8_t)(mpu_addr << 1U));
-    ok = MPU_I2C_WaitAck();
+    SW_I2C_Start(&mpu_i2c);
+    ok = SW_I2C_WriteByte(&mpu_i2c, (uint8_t)(mpu_addr << 1U));
     if (ok != 0U)
     {
-        MPU_I2C_SendByte(reg);
-        ok = MPU_I2C_WaitAck();
+        ok = SW_I2C_WriteByte(&mpu_i2c, reg);
     }
     if (ok != 0U)
     {
-        MPU_I2C_SendByte(value);
-        ok = MPU_I2C_WaitAck();
+        ok = SW_I2C_WriteByte(&mpu_i2c, value);
     }
-    MPU_I2C_Stop();
+    SW_I2C_Stop(&mpu_i2c);
     return ok;
 }
 
@@ -179,23 +85,20 @@ static uint8_t MPU6050_ReadReg(uint8_t reg)
 {
     uint8_t value = 0xFFU;
 
-    MPU_I2C_Start();
-    MPU_I2C_SendByte((uint8_t)(mpu_addr << 1U));
-    if (MPU_I2C_WaitAck() != 0U)
+    SW_I2C_Start(&mpu_i2c);
+    if (SW_I2C_WriteByte(&mpu_i2c, (uint8_t)(mpu_addr << 1U)) != 0U)
     {
-        MPU_I2C_SendByte(reg);
-        if (MPU_I2C_WaitAck() != 0U)
+        if (SW_I2C_WriteByte(&mpu_i2c, reg) != 0U)
         {
-            MPU_I2C_Start();
-            MPU_I2C_SendByte((uint8_t)((mpu_addr << 1U) | 1U));
-            if (MPU_I2C_WaitAck() != 0U)
+            SW_I2C_Start(&mpu_i2c);
+            if (SW_I2C_WriteByte(&mpu_i2c, (uint8_t)((mpu_addr << 1U) | 1U)) != 0U)
             {
-                value = MPU_I2C_RecvByte();
-                MPU_I2C_Ack(1U); /* NACK: last byte */
+                value = SW_I2C_ReadByte(&mpu_i2c);
+                SW_I2C_Ack(&mpu_i2c, 1U); /* NACK: last byte */
             }
         }
     }
-    MPU_I2C_Stop();
+    SW_I2C_Stop(&mpu_i2c);
     return value;
 }
 
@@ -207,27 +110,24 @@ static uint8_t MPU6050_ReadBuf(uint8_t reg, uint8_t* buf, uint8_t len)
     uint8_t i;
     uint8_t ok = 0U;
 
-    MPU_I2C_Start();
-    MPU_I2C_SendByte((uint8_t)(mpu_addr << 1U));
-    if (MPU_I2C_WaitAck() != 0U)
+    SW_I2C_Start(&mpu_i2c);
+    if (SW_I2C_WriteByte(&mpu_i2c, (uint8_t)(mpu_addr << 1U)) != 0U)
     {
-        MPU_I2C_SendByte(reg);
-        if (MPU_I2C_WaitAck() != 0U)
+        if (SW_I2C_WriteByte(&mpu_i2c, reg) != 0U)
         {
-            MPU_I2C_Start();
-            MPU_I2C_SendByte((uint8_t)((mpu_addr << 1U) | 1U));
-            if (MPU_I2C_WaitAck() != 0U)
+            SW_I2C_Start(&mpu_i2c);
+            if (SW_I2C_WriteByte(&mpu_i2c, (uint8_t)((mpu_addr << 1U) | 1U)) != 0U)
             {
                 for (i = 0U; i < len; i++)
                 {
-                    buf[i] = MPU_I2C_RecvByte();
-                    MPU_I2C_Ack((i == (uint8_t)(len - 1U)) ? 1U : 0U);
+                    buf[i] = SW_I2C_ReadByte(&mpu_i2c);
+                    SW_I2C_Ack(&mpu_i2c, (i == (uint8_t)(len - 1U)) ? 1U : 0U);
                 }
                 ok = 1U;
             }
         }
     }
-    MPU_I2C_Stop();
+    SW_I2C_Stop(&mpu_i2c);
     return ok;
 }
 
@@ -243,28 +143,21 @@ static uint8_t MPU6050_IsValidID(uint8_t id)
 
 uint8_t MPU6050_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
     uint8_t order;
     uint8_t addr_idx;
     uint8_t found = 0U;
     uint8_t retry;
 
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    BSP_DWT_DelayInit();
-
-    /* Both PB10/PB11 as open-drain outputs: the module provides 4.7k pull-ups */
-    GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    MPU_SCL_Write(1U);
-    MPU_SDA_Write(1U);
+    /* Set the default pin order first, then configure the GPIOs. */
+    mpu_pin_order = 0U;
+    MPU_ApplyPinOrder();
+    SW_I2C_Init(&mpu_i2c);
 
     /* Probe both pin orders x both slave addresses to find the module */
     for (order = 0U; (order < 2U) && (found == 0U); order++)
     {
         mpu_pin_order = order;
+        MPU_ApplyPinOrder();
         for (addr_idx = 0U; (addr_idx < 2U) && (found == 0U); addr_idx++)
         {
             mpu_addr = (addr_idx == 0U) ? 0x68U : 0x69U;

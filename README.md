@@ -301,9 +301,9 @@ settings set pwm_max 200   修改并保存（字段名：pwm_max / alpha / flags
 
 扩展：在 `BSP/Inc/settings.h` 的结构体中追加字段，并同步更新 `SETTINGS_Defaults()`。
 
-> 24C02 采用**软件 I2C**（位操作）驱动：STM32F1 硬件 I2C 在 RTOS 任务上下文
-> 下状态机不可靠（实测寄存器被破坏导致读写失败），软件 I2C 与 MPU6050 驱动
-> 一致，稳定且可移植。
+> 24C02 与 MPU6050 共用共享的**软件 I2C 模块**（`sw_i2c.h`）：STM32F1 硬件 I2C
+> 在 RTOS 任务上下文下状态机不可靠（实测寄存器被破坏导致读写失败），位操作
+> I2C 稳定且可移植。新增 I2C 设备直接复用 `SW_I2C_t` 即可。
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
