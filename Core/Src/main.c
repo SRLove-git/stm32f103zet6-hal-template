@@ -15,6 +15,7 @@
 #include "main.h"
 #include "beep.h"
 #include "bsp_selftest.h"
+#include "cli.h"
 #include "demo.h"
 #include "freertos_app.h"
 #include "key.h"
@@ -37,6 +38,7 @@ int main(void)
     /* Initialize board peripherals. */
     MX_GPIO_Init();
     MX_USART1_UART_Init();
+    CLI_Init();
 
     /* Boot banner over USART1 (P3 jumpers must connect USART1 <-> CH340). */
     printf("\r\n======================================\r\n");
@@ -61,7 +63,7 @@ int main(void)
     while (1)
     {
         Demo_KeyScan();
-        Demo_UartEcho();
+        Demo_CliPoll();
         Demo_AttitudeUpdate();
         HAL_Delay(100);
     }

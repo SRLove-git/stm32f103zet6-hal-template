@@ -21,6 +21,7 @@
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
 - **FreeRTOS（可选）**：`-DUSE_FREERTOS=ON` 编译任务版演示，内核见 `Middlewares/FreeRTOS/`
 - **算法工具库**：`filter.h`（滑动平均/低通/中值/1D 卡尔曼）、`pid.h`（PID）、`ringbuf.h`（环形缓冲）
+- **CLI 命令行**：串口输入命令调试（`help` 查看全部命令）
 
 ## 目录结构
 
@@ -267,6 +268,23 @@ cmake --preset freertos && cmake --build --preset freertos
 
 USART1 已启用**中断接收**：收到的字节进入 64 字节环形缓冲，演示程序会原样回显
 （`USART1_RxCount` / `USART1_RxRead` 读取）。
+
+## CLI 命令行
+
+串口（115200）输入命令即可调试，内置命令：
+
+```
+help         列出所有命令
+ver          显示版本
+led0/led1    控制 LED（on|off|toggle）
+beep         控制蜂鸣器（on|off|toggle）
+att          显示姿态角（Mahony/Madgwick）
+mpu          显示 MPU6050 原始数据
+adc          显示光敏传感器 ADC
+echo         回显参数
+```
+
+新增命令：实现 `CLI_CmdFn` 回调并用 `CLI_Register()` 注册即可（参考 `demo.c`）。
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

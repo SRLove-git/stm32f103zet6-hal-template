@@ -34,7 +34,7 @@ static void KeyTask(void* arg)
     for (;;)
     {
         Demo_KeyScan();
-        Demo_UartEcho();
+        Demo_CliPoll();
         vTaskDelay(pdMS_TO_TICKS(20U));
     }
 }
