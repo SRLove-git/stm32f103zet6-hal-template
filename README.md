@@ -20,6 +20,7 @@
 - **CMake 构建**：`cmake/toolchain-arm-none-eabi.cmake` + 顶层 `CMakeLists.txt`
 - **烧录**：OpenOCD + ST-Link（SWD）的 `flash` / `erase` 目标
 - **FreeRTOS（可选）**：`-DUSE_FREERTOS=ON` 编译任务版演示，内核见 `Middlewares/FreeRTOS/`
+- **算法工具库**：`BSP/Inc/filter.h`（滑动平均/低通/中值/1D 卡尔曼）
 
 ## 目录结构
 
@@ -253,6 +254,14 @@ cmake --preset freertos && cmake --build --preset freertos
 - FreeRTOS 内核来自 STM32Cube_FW_F1（V10.x，MIT 许可），堆为 heap_4（10 KB）
 - SysTick 由 HAL tick 与 FreeRTOS tick 共享（1 kHz），见 `stm32f1xx_it.c`
 - 任务间 printf 未加互斥，仅用于演示；多任务打印请自行加锁
+
+## 算法工具库
+
+纯数学模块，不依赖硬件，可直接用于传感器数据处理：
+
+| 模块 | 内容 | 用法 |
+| --- | --- | --- |
+| `filter.h` | 滑动平均（8 点）、一阶低通、5 点中值、1D 卡尔曼 | 各算法用独立结构体实例，`Init` 后循环 `Update` |
 
 参与贡献前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
